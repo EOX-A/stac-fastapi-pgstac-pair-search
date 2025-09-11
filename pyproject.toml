@@ -1,0 +1,28 @@
+[project]
+name = "stac-fastapi-pgstac-pair-search"
+version = "0.1.0"
+description = "pair-search extension of stac-fastapi-pgstac"
+readme = "README.md"
+authors = [
+    { name = "Petr Sevcik", email = "petr.sevcik@eox.at" },
+    { name = "Joachim Ungar", email = "joachim.ungar@eox.at" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "stac-fastapi-pgstac>=6.0.0",
+    "uvicorn>=0.35.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.15,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pystac-client>=0.9.0",
+    "pytest>=8.4.2",
+    "requests>=2.32.5",
+    "ruff>=0.12.12",
+    "tqdm>=4.67.1",
+]
