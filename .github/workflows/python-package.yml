@@ -41,10 +41,10 @@ jobs:
           sudo apt-add-repository -y ppa:ubuntugis/ubuntugis-unstable
           sudo apt-get -y update
           sudo apt-get install -y gdal-bin libgdal-dev libproj-dev libgeos-dev
-          python -m pip install --upgrade uv wheel
-          uv venv
-          uv pip install -r pyproject.toml --all-extras
-          uv pip freeze
+          python -m pip install --upgrade pip wheel
+          pip install -r tests/requirements.txt
+          pip install -e .[complete]
+          pip freeze
 
       - name: Start containers
         run: docker compose -f "docker-compose.yml" up -d
