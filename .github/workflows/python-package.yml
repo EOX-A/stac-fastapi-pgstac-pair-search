@@ -1,0 +1,68 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python package test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 8 * * 1,4'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        os: ["ubuntu-22.04", "ubuntu-latest"]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Lint
+        run: |
+          python -m pip install pre-commit
+          pre-commit run --show-diff-on-failure --all-files
+
+      - name: Install dependencies
+        env:
+          CURL_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+        run: |
+          sudo apt-add-repository -y ppa:ubuntugis/ubuntugis-unstable
+          sudo apt-get -y update
+          sudo apt-get install -y gdal-bin libgdal-dev libproj-dev libgeos-dev
+          python -m pip install --upgrade pip wheel
+          pip install -e .[dev]
+          pip freeze
+
+      - name: Start containers
+        run: docker compose -f "docker-compose.yml" up -d
+
+      # run tests
+      - name: run 
+        run: pytest -v --cov stac_fastapi_pgstac_pair_search --cov-report xml:coverage.xml --cov-report=term-missing:skip-covered --junitxml=pytest.xml
+
+      # # Upload the report to Codecov
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v5
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     slug: eox-a/stac-fastapi-pgstac-pair-search
+
+      # this will let the workflow fail if coverage is below 100%
+      - name: Pytest coverage
+        run: coverage report --skip-covered --show-missing --fail-under 100
+
+      - name: Stop containers
+        if: always()
+        run: docker compose -f "docker-compose.yml" down
