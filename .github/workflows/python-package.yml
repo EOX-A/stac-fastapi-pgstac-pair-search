@@ -47,7 +47,8 @@ jobs:
           pip freeze
 
       - name: Start containers
-        run: docker compose -f "docker-compose.yml" up -d
+        # wait for 60 seconds to allow the database to initialize
+        run: docker compose -f "docker-compose.yml" up -d && sleep 60
 
       # run tests
       - name: run 
