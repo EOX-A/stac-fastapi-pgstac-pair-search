@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Annotated, Any, Literal
+from typing import Dict, Optional, List, Annotated, Any, Literal, Union
 
 from fastapi import Query
 from pydantic import Field, AfterValidator, BaseModel, model_validator
@@ -61,12 +61,8 @@ class PairSearchRequest(BaseModel, APIRequest):
     first_ids: Optional[List[str]] = Field(alias="first-ids", default=None)
     second_ids: Optional[List[str]] = Field(alias="second-ids", default=None)
 
-    first_collections: Optional[List[str]] = Field(
-        alias="first-collections", default=None
-    )
-    second_collections: Optional[List[str]] = Field(
-        alias="second-collections", default=None
-    )
+    first_collections: Union[str, List[str]] = Field(alias="first-collections")
+    second_collections: Union[str, List[str]] = Field(alias="second-collections")
 
     response_type: Optional[Literal["pair", "first-only", "second-only"]] = Field(
         alias="response-type", default="pair"

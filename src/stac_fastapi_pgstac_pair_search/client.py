@@ -24,11 +24,11 @@ class PairSearchClient(CoreCrudClient):
     async def get_pair_search(
         self,
         request: Request,
-        **kwargs: Any,
+        **__: Any,
     ) -> ItemCollection:
         """Cross catalog search (GET).
 
-        Called with `GET /search`.
+        Called with `GET /pair-search`.
 
         Args:
             search_request: search request parameters.
@@ -37,7 +37,8 @@ class PairSearchClient(CoreCrudClient):
             ItemCollection containing items which match the search criteria.
         """
         item_collection = await self._search_base(
-            PairSearchRequest.model_validate(kwargs), request=request
+            PairSearchRequest.model_validate(request.query_params._dict, by_alias=True),
+            request=request,
         )
         links = await PairSearchLinks(request=request).get_links(
             extra_links=item_collection["links"]
@@ -47,9 +48,8 @@ class PairSearchClient(CoreCrudClient):
 
     async def post_pair_search(
         self,
-        search_request: PairSearchRequest,
         request: Request,
-        **kwargs: Any,
+        **__: Any,
     ) -> ItemCollection:
         """Cross catalog search (POST).
 
@@ -61,7 +61,8 @@ class PairSearchClient(CoreCrudClient):
         Returns:
             ItemCollection containing items which match the search criteria.
         """
-        search_request = PairSearchRequest.model_validate(kwargs)
+        body = await request.body()
+        search_request = PairSearchRequest.model_validate_json(body, by_alias=True)
         item_collection = await self._search_base(search_request, request=request)
 
         # If we have the `fields` extension enabled
@@ -102,7 +103,6 @@ class PairSearchClient(CoreCrudClient):
         search_request_json = search_request.model_dump_json(
             exclude_none=True, by_alias=True
         )
-
         try:
             async with request.app.state.get_connection(request, "r") as conn:
                 # TODO: implement our own search function
@@ -192,5 +192,4 @@ class PairSearchClient(CoreCrudClient):
             next=next,
             prev=prev,
         ).get_links()
-
         return collection

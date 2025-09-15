@@ -28,6 +28,7 @@ api.router.add_api_route(
     response_class=GeoJSONResponse,
     response_model_exclude_unset=True,
     response_model_exclude_none=True,
+    response_model_by_alias=True,
     methods=["POST"],
     endpoint=create_async_endpoint(
         PairSearchClient().post_pair_search, PairSearchRequest
@@ -48,6 +49,7 @@ api.router.add_api_route(
     response_class=GeoJSONResponse,
     response_model_exclude_unset=True,
     response_model_exclude_none=True,
+    response_model_by_alias=True,
     methods=["GET"],
     endpoint=create_async_endpoint(
         PairSearchClient().get_pair_search, PairSearchRequest
