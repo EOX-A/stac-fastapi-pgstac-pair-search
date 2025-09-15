@@ -53,7 +53,7 @@ services:
       /bin/sh -c "
         ./scripts/wait-for-it.sh -t 60 app:8082 &&
         python -m pip install pip -U &&
-        python -m pip install requests tqdm pystac_client &&
+        python -m pip install pytest requests tqdm pystac_client &&
         python /app/scripts/ingest_test_data.py http://app:8082
       "
     depends_on:
