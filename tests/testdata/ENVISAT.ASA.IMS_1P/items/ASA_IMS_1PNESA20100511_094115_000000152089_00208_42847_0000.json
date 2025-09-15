@@ -1,1 +1,261 @@
-{"type": "Feature", "stac_version": "1.1.0", "stac_extensions": ["https://stac-extensions.github.io/projection/v2.0.0/schema.json", "https://stac-extensions.github.io/sar/v1.0.0/schema.json", "https://stac-extensions.github.io/sat/v1.0.0/schema.json", "https://stac-extensions.github.io/product/v0.1.0/schema.json", "https://stac-extensions.github.io/grid/v1.1.0/schema.json", "https://stac-extensions.github.io/timestamps/v1.1.0/schema.json", "https://stac-extensions.github.io/web-map-links/v1.2.0/schema.json"], "id": "ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000", "geometry": {"coordinates": [[[8.64, 44.2], [8.39, 43.32], [9.7, 43.11], [9.97, 43.99], [8.64, 44.2]]], "type": "Polygon"}, "bbox": [8.39, 43.11, 9.97, 44.2], "properties": {"grid:code": "WRS-208-2727", "proj:code": "EPSG:4326", "time:published": "2010-05-11T09:41:30.991Z", "start_datetime": "2010-05-11T09:41:15.901Z", "end_datetime": "2010-05-11T09:41:30.991Z", "product:type": "ASA_IMS_1P", "published": "2010-05-11T09:41:30.991Z", "title": "ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000", "platform": "Envisat", "sar:polarizations": ["VV"], "datetime": "2010-05-11T09:41:15.901000Z", "sar:instrument_mode": "IM", "instruments": ["ASAR"], "constellation": "Envisat", "sat:orbit_state": "descending", "updated": "2025-04-08T12:23:22Z", "sat:absolute_orbit": 42847, "product:acquisition_type": "nominal"}, "links": [{"rel": "self", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000", "type": "application/geo+json;profile=\"https://stacspec.org\""}, {"rel": "collection", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P", "type": "application/json", "title": "ENVISAT.ASA.IMS_1P"}, {"rel": "parent", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P", "type": "application/json", "title": "ENVISAT.ASA.IMS_1P"}, {"rel": "alternate", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/atom%2Bxml", "type": "application/atom+xml", "title": "Atom format"}, {"rel": "alternate", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/ld%2Bjson;profile=https://schema.org", "type": "application/ld+json;profile=\"https://schema.org\"", "title": "JSON-LD (schema.org) metadata"}, {"rel": "alternate", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/ld%2Bjson", "type": "application/ld+json;profile=\"http://data.europa.eu/930/\"", "title": "JSON-LD (GeoDCAT-AP) metadata"}, {"rel": "alternate", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/rdf%2Bxml;profile=https://schema.org", "type": "application/rdf+xml;profile=\"https://schema.org\"", "title": "RDF/XML (schema.org) metadata"}, {"rel": "alternate", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/rdf%2Bxml", "type": "application/rdf+xml;profile=\"http://data.europa.eu/930/\"", "title": "RDF/XML (GeoDCAT-AP) metadata"}, {"rel": "alternate", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=text/turtle;profile=https://schema.org", "type": "text/turtle;profile=\"https://schema.org\"", "title": "Turtle (schema.org) metadata"}, {"rel": "alternate", "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=text/turtle", "type": "text/turtle;profile=\"http://data.europa.eu/930/\"", "title": "Turtle (GeoDCAT-AP) metadata"}, {"rel": "wms", "href": "https://eocat.esa.int/wms09/ows", "type": "image/png", "title": "ENVISAT.ASA.IMS_1P product", "wms:transparent": true, "wms:dimensions": {"dim_range": "{DimRange}", "TIME": "2010-05-11T09:41:15Z/2010-05-11T09:41:30Z", "version": "1.1.1"}, "wms:layers": ["ASA_IMS_1P___heatmap"], "wms:styles": ["{Styles}"]}, {"rel": "wmts", "href": "https://eocat.esa.int/wmts09/1.0.0/ASA_IMS_1P/{style}/{time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpgpng", "type": "image/jpgpng", "title": "ENVISAT.ASA.IMS_1P product", "wmts:layers": ["ASA_IMS_1P"], "wmts:dimensions": {"TileMatrixSet": "WGS84", "style": "default", "time": "2010-05-11T09:41:15Z--2010-05-11T09:41:30Z"}}, {"rel": "root", "href": "https://eocat.esa.int/eo-catalogue", "type": "application/json", "title": "ESA Catalog"}], "assets": {"thumbnail": {"href": "http://esar-ds.eo.esa.int/oads/meta/ASA_IMS_1P/thumbnail/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000.N1_TIMG.jpg", "type": "image/jpeg", "title": "THUMBNAIL", "roles": ["thumbnail"]}, "offering_2": {"href": "https://eocat.esa.int/wmts09/1.0.0/ASA_IMS_1P/default/2010-05-11T09:41:15Z--2010-05-11T09:41:30Z/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpgpng", "type": "image/jpgpng", "title": "GetTile", "roles": ["http://www.opengis.net/spec/owc-geojson/1.0/req/wmts#GetTile"]}, "offering_1": {"href": "https://eocat.esa.int/wmts09/1.0.0/WMTSCapabilities.xml", "type": "application/xml", "title": "GetCapabilities", "roles": ["http://www.opengis.net/spec/owc-geojson/1.0/req/wmts#GetCapabilities"]}, "enclosure": {"href": "https://esar-ds.eo.esa.int/oads/data/ASA_IMS_1P/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000.N1", "type": "application/x-binary", "title": "Download", "roles": ["data"]}, "metadata_ogc_10_157r4": {"href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/gml%2Bxml&recordSchema=om", "type": "application/gml+xml;profile=\"http://www.opengis.net/spec/EOMPOM/1.1\"", "title": "OGC 10-157r4 metadata", "roles": ["metadata"]}, "offering_4": {"href": "https://eocat.esa.int/wms09/ows?service=WMS&version=1.1.1&request=GetMap&layers=ASA_IMS_1P___heatmap&format=image/png&TRANSPARENT=true&TIME=2010-05-11T09:41:15Z/2010-05-11T09:41:30Z&width={Width}&height={Height}&SRS=EPSG:4326&styles={Styles}&bbox={BoundingBox}&dim_range={DimRange}", "type": "image/png", "title": "GetMap", "roles": ["http://www.opengis.net/spec/owc-geojson/1.0/req/wms#GetMap"]}, "metadata_ogc_17_003r2": {"href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?mode=owc", "type": "application/geo+json;profile=\"http://www.opengis.net/spec/eo-geojson/1.0\"", "title": "OGC 17-003r2 metadata", "roles": ["metadata"]}, "metadata_iso_19139": {"href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/vnd.iso.19139%2Bxml", "type": "application/vnd.iso.19139+xml", "title": "ISO 19139 metadata", "roles": ["metadata"]}, "offering_3": {"href": "https://eocat.esa.int/wms09/ows?service=WMS&version=1.1.1&request=GetCapabilities", "type": "application/xml", "title": "GetCapabilities", "roles": ["http://www.opengis.net/spec/owc-geojson/1.0/req/wms#GetCapabilities"]}, "metadata_html": {"href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=text/html", "type": "text/html", "title": "HTML", "roles": ["metadata"]}, "quicklook": {"href": "http://esar-ds.eo.esa.int/oads/meta/ASA_IMS_1P/browse/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000.N1_BID.JPG", "type": "image/jpeg", "title": "QUICKLOOK", "roles": ["overview"]}}, "collection": "ENVISAT.ASA.IMS_1P"}
+{
+  "type": "Feature",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/sar/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/sat/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/product/v0.1.0/schema.json",
+    "https://stac-extensions.github.io/grid/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/timestamps/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/web-map-links/v1.2.0/schema.json"
+  ],
+  "id": "ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000",
+  "geometry": {
+    "coordinates": [
+      [
+        [
+          8.64,
+          44.2
+        ],
+        [
+          8.39,
+          43.32
+        ],
+        [
+          9.7,
+          43.11
+        ],
+        [
+          9.97,
+          43.99
+        ],
+        [
+          8.64,
+          44.2
+        ]
+      ]
+    ],
+    "type": "Polygon"
+  },
+  "bbox": [
+    8.39,
+    43.11,
+    9.97,
+    44.2
+  ],
+  "properties": {
+    "grid:code": "WRS-208-2727",
+    "proj:code": "EPSG:4326",
+    "time:published": "2010-05-11T09:41:30.991Z",
+    "start_datetime": "2010-05-11T09:41:15.901Z",
+    "end_datetime": "2010-05-11T09:41:30.991Z",
+    "product:type": "ASA_IMS_1P",
+    "published": "2010-05-11T09:41:30.991Z",
+    "title": "ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000",
+    "platform": "Envisat",
+    "sar:polarizations": [
+      "VV"
+    ],
+    "datetime": "2010-05-11T09:41:15.901000Z",
+    "sar:instrument_mode": "IM",
+    "instruments": [
+      "ASAR"
+    ],
+    "constellation": "Envisat",
+    "sat:orbit_state": "descending",
+    "updated": "2025-04-08T12:23:22Z",
+    "sat:absolute_orbit": 42847,
+    "product:acquisition_type": "nominal"
+  },
+  "links": [
+    {
+      "rel": "self",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000",
+      "type": "application/geo+json;profile=\"https://stacspec.org\""
+    },
+    {
+      "rel": "collection",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P",
+      "type": "application/json",
+      "title": "ENVISAT.ASA.IMS_1P"
+    },
+    {
+      "rel": "parent",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P",
+      "type": "application/json",
+      "title": "ENVISAT.ASA.IMS_1P"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/atom%2Bxml",
+      "type": "application/atom+xml",
+      "title": "Atom format"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/ld%2Bjson;profile=https://schema.org",
+      "type": "application/ld+json;profile=\"https://schema.org\"",
+      "title": "JSON-LD (schema.org) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/ld%2Bjson",
+      "type": "application/ld+json;profile=\"http://data.europa.eu/930/\"",
+      "title": "JSON-LD (GeoDCAT-AP) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/rdf%2Bxml;profile=https://schema.org",
+      "type": "application/rdf+xml;profile=\"https://schema.org\"",
+      "title": "RDF/XML (schema.org) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/rdf%2Bxml",
+      "type": "application/rdf+xml;profile=\"http://data.europa.eu/930/\"",
+      "title": "RDF/XML (GeoDCAT-AP) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=text/turtle;profile=https://schema.org",
+      "type": "text/turtle;profile=\"https://schema.org\"",
+      "title": "Turtle (schema.org) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=text/turtle",
+      "type": "text/turtle;profile=\"http://data.europa.eu/930/\"",
+      "title": "Turtle (GeoDCAT-AP) metadata"
+    },
+    {
+      "rel": "wms",
+      "href": "https://eocat.esa.int/wms09/ows",
+      "type": "image/png",
+      "title": "ENVISAT.ASA.IMS_1P product",
+      "wms:transparent": true,
+      "wms:dimensions": {
+        "dim_range": "{DimRange}",
+        "TIME": "2010-05-11T09:41:15Z/2010-05-11T09:41:30Z",
+        "version": "1.1.1"
+      },
+      "wms:layers": [
+        "ASA_IMS_1P___heatmap"
+      ],
+      "wms:styles": [
+        "{Styles}"
+      ]
+    },
+    {
+      "rel": "wmts",
+      "href": "https://eocat.esa.int/wmts09/1.0.0/ASA_IMS_1P/{style}/{time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpgpng",
+      "type": "image/jpgpng",
+      "title": "ENVISAT.ASA.IMS_1P product",
+      "wmts:layers": [
+        "ASA_IMS_1P"
+      ],
+      "wmts:dimensions": {
+        "TileMatrixSet": "WGS84",
+        "style": "default",
+        "time": "2010-05-11T09:41:15Z--2010-05-11T09:41:30Z"
+      }
+    },
+    {
+      "rel": "root",
+      "href": "https://eocat.esa.int/eo-catalogue",
+      "type": "application/json",
+      "title": "ESA Catalog"
+    }
+  ],
+  "assets": {
+    "thumbnail": {
+      "href": "http://esar-ds.eo.esa.int/oads/meta/ASA_IMS_1P/thumbnail/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000.N1_TIMG.jpg",
+      "type": "image/jpeg",
+      "title": "THUMBNAIL",
+      "roles": [
+        "thumbnail"
+      ]
+    },
+    "offering_2": {
+      "href": "https://eocat.esa.int/wmts09/1.0.0/ASA_IMS_1P/default/2010-05-11T09:41:15Z--2010-05-11T09:41:30Z/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpgpng",
+      "type": "image/jpgpng",
+      "title": "GetTile",
+      "roles": [
+        "http://www.opengis.net/spec/owc-geojson/1.0/req/wmts#GetTile"
+      ]
+    },
+    "offering_1": {
+      "href": "https://eocat.esa.int/wmts09/1.0.0/WMTSCapabilities.xml",
+      "type": "application/xml",
+      "title": "GetCapabilities",
+      "roles": [
+        "http://www.opengis.net/spec/owc-geojson/1.0/req/wmts#GetCapabilities"
+      ]
+    },
+    "enclosure": {
+      "href": "https://esar-ds.eo.esa.int/oads/data/ASA_IMS_1P/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000.N1",
+      "type": "application/x-binary",
+      "title": "Download",
+      "roles": [
+        "data"
+      ]
+    },
+    "metadata_ogc_10_157r4": {
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/gml%2Bxml&recordSchema=om",
+      "type": "application/gml+xml;profile=\"http://www.opengis.net/spec/EOMPOM/1.1\"",
+      "title": "OGC 10-157r4 metadata",
+      "roles": [
+        "metadata"
+      ]
+    },
+    "offering_4": {
+      "href": "https://eocat.esa.int/wms09/ows?service=WMS&version=1.1.1&request=GetMap&layers=ASA_IMS_1P___heatmap&format=image/png&TRANSPARENT=true&TIME=2010-05-11T09:41:15Z/2010-05-11T09:41:30Z&width={Width}&height={Height}&SRS=EPSG:4326&styles={Styles}&bbox={BoundingBox}&dim_range={DimRange}",
+      "type": "image/png",
+      "title": "GetMap",
+      "roles": [
+        "http://www.opengis.net/spec/owc-geojson/1.0/req/wms#GetMap"
+      ]
+    },
+    "metadata_ogc_17_003r2": {
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?mode=owc",
+      "type": "application/geo+json;profile=\"http://www.opengis.net/spec/eo-geojson/1.0\"",
+      "title": "OGC 17-003r2 metadata",
+      "roles": [
+        "metadata"
+      ]
+    },
+    "metadata_iso_19139": {
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=application/vnd.iso.19139%2Bxml",
+      "type": "application/vnd.iso.19139+xml",
+      "title": "ISO 19139 metadata",
+      "roles": [
+        "metadata"
+      ]
+    },
+    "offering_3": {
+      "href": "https://eocat.esa.int/wms09/ows?service=WMS&version=1.1.1&request=GetCapabilities",
+      "type": "application/xml",
+      "title": "GetCapabilities",
+      "roles": [
+        "http://www.opengis.net/spec/owc-geojson/1.0/req/wms#GetCapabilities"
+      ]
+    },
+    "metadata_html": {
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000?httpAccept=text/html",
+      "type": "text/html",
+      "title": "HTML",
+      "roles": [
+        "metadata"
+      ]
+    },
+    "quicklook": {
+      "href": "http://esar-ds.eo.esa.int/oads/meta/ASA_IMS_1P/browse/ASA_IMS_1PNESA20100511_094115_000000152089_00208_42847_0000.N1_BID.JPG",
+      "type": "image/jpeg",
+      "title": "QUICKLOOK",
+      "roles": [
+        "overview"
+      ]
+    }
+  },
+  "collection": "ENVISAT.ASA.IMS_1P"
+}

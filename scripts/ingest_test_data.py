@@ -81,7 +81,7 @@ def ingest_data(
                 item_path = f"{collection_dir}/items/{item.id}.json"
                 os.makedirs(os.path.dirname(item_path), exist_ok=True)
                 with open(item_path, "w") as dst:
-                    dst.write(json.dumps(item.to_dict()))
+                    dst.write(json.dumps(item.to_dict(), indent=2))
 
     # ingest collection
     with open(collection_json, "r") as src:
