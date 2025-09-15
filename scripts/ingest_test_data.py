@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Ingest sample data during docker-compose"""
 
+import json
+import os
 import sys
 from urllib.parse import urljoin
 
@@ -17,6 +19,7 @@ try:
     app_host = sys.argv[1]
 except IndexError:
     raise Exception("You must include full path/port to stac instance")
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 def post_or_put(url: str, data: dict):
@@ -54,21 +57,44 @@ def ingest_data(
             )
             return
 
-    # get collection metadata from remote catalog
-    with requests.get(
-        urljoin(catalog_url, f"/collections/{collection_name}")
-    ) as response:
-        collection_json = response.json()
-    post_or_put(urljoin(app_host, "/collections"), collection_json)
+    # TODO: check if data is already downloaded:
+    collection_dir = f"{SCRIPT_DIR}/../tests/testdata/{collection_name}"
+    collection_json = f"{collection_dir}/collection.json"
+    if not os.path.exists(collection_dir) or not os.listdir(collection_dir):
+        if not os.path.exists(collection_dir):
+            os.makedirs(collection_dir)
+            os.makedirs(f"{collection_dir}/items")
+        # get collection metadata from remote catalog
+        with requests.get(
+            urljoin(catalog_url, f"/collections/{collection_name}")
+        ) as response:
+            with open(collection_json, "w") as dst:
+                dst.write(response.text)
 
-    # search for items in remote catalog and ingest
-    client = Client.open(catalog_url)
-    results = client.search(collections=[collection_name], bbox=bbox, datetime=datetime)
-    for item in tqdm.tqdm(results.items(), desc="Ingesting items", unit=" items"):
-        if item.collection_id == collection_name:
+        # search for items in remote catalog and ingest
+        client = Client.open(catalog_url)
+        results = client.search(
+            collections=[collection_name], bbox=bbox, datetime=datetime
+        )
+        for item in tqdm.tqdm(results.items(), desc="downloading items", unit=" items"):
+            if item.collection_id == collection_name:
+                item_path = f"{collection_dir}/items/{item.id}.json"
+                os.makedirs(os.path.dirname(item_path), exist_ok=True)
+                with open(item_path, "w") as dst:
+                    dst.write(json.dumps(item.to_dict()))
+
+    # ingest collection
+    with open(collection_json, "r") as src:
+        post_or_put(urljoin(app_host, "/collections"), json.loads(src.read()))
+
+    # ingest downloaded items
+    for item_json in tqdm.tqdm(
+        os.listdir(collection_dir + "/items"), desc="ingesting items", unit=" items"
+    ):
+        with open(f"{collection_dir}/items/{item_json}", "r") as src:
             post_or_put(
                 urljoin(app_host, f"/collections/{collection_name}/items"),
-                item.to_dict(),
+                json.loads(src.read()),
             )
 
 

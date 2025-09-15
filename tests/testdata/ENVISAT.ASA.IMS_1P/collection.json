@@ -1,0 +1,371 @@
+{
+  "extent": {
+    "spatial": {"bbox": [[
+      -180,
+      -90,
+      180,
+      90
+    ]]},
+    "temporal": {"interval": [[
+      "2002-10-18T00:00:00.000Z",
+      "2012-04-08T23:59:59.999Z"
+    ]]}
+  },
+  "stac_version": "1.0.0",
+  "keywords": [
+    "Land Surface",
+    "EARTH SCIENCE > LAND SURFACE",
+    "Topography",
+    "EARTH SCIENCE > LAND SURFACE > TOPOGRAPHY",
+    "Soils",
+    "EARTH SCIENCE > AGRICULTURE > SOILS",
+    "EARTH SCIENCE > LAND SURFACE > SOILS",
+    "Vegetation",
+    "EARTH SCIENCE > BIOSPHERE > VEGETATION",
+    "Cryosphere",
+    "EARTH SCIENCE > CRYOSPHERE",
+    "Snow and Ice",
+    "EARTH SCIENCE > CRYOSPHERE > SNOW/ICE",
+    "EARTH SCIENCE > TERRESTRIAL HYDROSPHERE > SNOW/ICE",
+    "Sea Ice",
+    "EARTH SCIENCE > CRYOSPHERE > SEA ICE",
+    "EARTH SCIENCE > OCEANS > SEA ICE",
+    "Oceans",
+    "EARTH SCIENCE > OCEANS",
+    "Terrestrial Hydrosphere",
+    "EARTH SCIENCE > TERRESTRIAL HYDROSPHERE",
+    "Sun-synchronous",
+    "800 km",
+    "5 - 1150 km",
+    "Imaging Radars",
+    "Envisat",
+    "ASAR"
+  ],
+  "created": "2019-05-30T00:00:00.000Z",
+  "description": "This data product represents a single-look, complex, slant-range, digital image generated from Level 0 ASAR data collected when the instrument is in Image Mode. Seven possible swaths in HH or VV polarisation are available. The product is primarily intended for use in SAR quality assessment and calibration or applications requiring complex SAR images such as interferometry, and can be used to derive higher level products. The spatial coverage is about 100 km along track per 56- 100 km across track, and the radiometric resolution is 1 look in azimuth, 1 look in range. The file size is 741 Mbytes. It is worth highlighting that Azimuth pixel spacing depends on Earth-Satellite relative velocity and actual PRF and slant range pixel spacing is given by ASAR sampling frequency (19.208 Mhz). Auxiliary data include: Orbit state vector, Time correlation parameters, Main Processing parameters ADS, Doppler Centroid ADS, Chirp ADS, Antenna Elevation Pattern ADS, Geolocation Grid ADS, SQ ADS. Spatial Resolution: approximately 8m slant range x approximately 4m azimuth",
+  "collection": "EOP:ESA:EARTH-ONLINE",
+  "type": "Collection",
+  "title": "Envisat ASAR IM Single Look Complex L1 [ASA_IMS_1P]",
+  "version": "10.0",
+  "license": "other",
+  "assets": {
+    "offering_2": {
+      "roles": ["http://www.opengis.net/spec/owc-geojson/1.0/req/wmts#GetTile"],
+      "href": "https://eocat.esa.int/wmts09/1.0.0/{productType}/default/{beginningDateTime}--{endingDateTime}/WGS84/{TileMatrix}/{TileRow}/{TileCol}.jpgpng",
+      "title": "GetTile",
+      "type": "image/jpgpng"
+    },
+    "offering_1": {
+      "roles": ["http://www.opengis.net/spec/owc-geojson/1.0/req/wmts#GetCapabilities"],
+      "href": "https://eocat.esa.int/wmts09/1.0.0/WMTSCapabilities.xml",
+      "title": "GetCapabilities",
+      "type": "application/xml"
+    },
+    "enclosure": {
+      "roles": ["data"],
+      "href": "https://esar-ds.eo.esa.int/oads/meta/ASA_IMS_1P/index",
+      "type": "application/x-binary",
+      "title": "OADS repository - OADS repository"
+    },
+    "offering_4": {
+      "roles": ["http://www.opengis.net/spec/owc-geojson/1.0/req/wms#GetMap"],
+      "href": "https://eocat.esa.int/wms09/ows?service=WMS&version=1.1.1&request=GetMap&layers=ASA_IMS_1P___heatmap&format=image/png&TRANSPARENT=true&TIME={beginningDateTime}/{endingDateTime}&width={Width}&height={Height}&SRS=EPSG:4326&styles={Styles}&bbox={BoundingBox}&dim_range={DimRange}",
+      "title": "GetMap",
+      "type": "image/png"
+    },
+    "metadata_iso_19139": {
+      "roles": ["metadata"],
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/vnd.iso.19139%2Bxml",
+      "title": "ISO 19139 metadata",
+      "type": "application/vnd.iso.19139+xml"
+    },
+    "metadata_iso_19139_2": {
+      "roles": ["metadata"],
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/vnd.iso.19139-2%2Bxml",
+      "title": "ISO 19139-2 metadata",
+      "type": "application/vnd.iso.19139-2+xml"
+    },
+    "offering_3": {
+      "roles": ["http://www.opengis.net/spec/owc-geojson/1.0/req/wms#GetCapabilities"],
+      "href": "https://eocat.esa.int/wms09/ows?service=WMS&version=1.1.1&request=GetCapabilities",
+      "title": "GetCapabilities",
+      "type": "application/xml"
+    },
+    "metadata_dif_10": {
+      "roles": ["metadata"],
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/dif10%2Bxml",
+      "title": "DIF-10 metadata",
+      "type": "application/dif10+xml"
+    },
+    "metadata_ogc_17_084r1": {
+      "roles": ["metadata"],
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?mode=owc",
+      "title": "OGC 17-084r1 metadata",
+      "type": "application/geo+json;profile=\"http://www.opengis.net/spec/eoc-geojson/1.0\""
+    },
+    "metadata_html": {
+      "roles": ["metadata"],
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=text/html",
+      "title": "HTML",
+      "type": "text/html"
+    },
+    "metadata_iso_191115_3": {
+      "roles": ["metadata"],
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/vnd.iso.19115-3%2Bxml",
+      "title": "ISO 19115-3 metadata",
+      "type": "application/vnd.iso.19115-3+xml"
+    },
+    "quicklook": {
+      "roles": ["overview"],
+      "href": "http://esar-ds.eo.esa.int/oads/meta/ASA_IMS_1P/browse/ASA_IMS_1PNESA20120405_075501_000000153113_00222_52822_0000.N1_BID.JPG",
+      "type": "image/jpeg",
+      "title": "graphic overview"
+    }
+  },
+  "links": [
+    {
+      "wms:transparent": true,
+      "rel": "wms",
+      "wms:dimensions": {
+        "dim_range": "{DimRange}",
+        "TIME": "{beginningDateTime}/{endingDateTime}",
+        "version": "1.1.1"
+      },
+      "href": "https://eocat.esa.int/wms09/ows",
+      "type": "image/png",
+      "title": "ENVISAT.ASA.IMS_1P",
+      "wms:layers": ["ASA_IMS_1P___heatmap"],
+      "wms:styles": ["{Styles}"]
+    },
+    {
+      "rel": "self",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P",
+      "type": "application/json"
+    },
+    {
+      "rel": "root",
+      "href": "https://eocat.esa.int/eo-catalogue",
+      "type": "application/json",
+      "title": "ESA Catalog"
+    },
+    {
+      "rel": "parent",
+      "href": "https://eocat.esa.int/eo-catalogue",
+      "title": "collections",
+      "type": "application/json"
+    },
+    {
+      "rel": "items",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/items",
+      "type": "application/geo+json",
+      "title": "Datasets search for the series ENVISAT.ASA.IMS_1P"
+    },
+    {
+      "rel": "http://www.opengis.net/def/rel/ogc/1.0/queryables",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/queryables",
+      "type": "application/schema+json",
+      "title": "Queryables for ENVISAT.ASA.IMS_1P"
+    },
+    {
+      "rel": "search",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P/api",
+      "type": "application/opensearchdescription+xml",
+      "title": "OpenSearch Description Document"
+    },
+    {
+      "rel": "profile",
+      "href": "http://www.opengis.net/spec/owc-geojson/1.0/req/core"
+    },
+    {
+      "rel": "profile",
+      "href": "http://www.opengis.net/spec/eoc-geojson/1.0/req/core"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://earth.esa.int/eogateway/instruments/asar/auxiliary-data",
+      "type": "text/html",
+      "title": "ASAR auxiliary data - Auxiliary Data"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://earth.esa.int/eogateway/documents/20142/37627/Envisat%20ASAR%20products%20specification",
+      "type": "application/pdf",
+      "title": "ASAR Products Specification - Revision C - Product Specifications"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://earth.esa.int/eogateway/instruments/asar/products-information",
+      "type": "text/html",
+      "title": "Envisat ASAR Sensor Performance, Products and Algorithms - Product Information"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://earth.esa.int/eogateway/documents/20142/37627/Envisat-ASAR-science-and-applications.pdf",
+      "type": "application/pdf",
+      "title": "Envisat ASAR Science and Applications - Technical Note"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://earth.esa.int/eogateway/documents/20142/37627/ASAR-Product-Handbook.pdf?text=ASAR+Handbook",
+      "type": "application/pdf",
+      "title": "ASAR Product Handbook - User Manual"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://earth.esa.int/eogateway/search?text=&category=Document%20library&filter=asar",
+      "type": "text/html",
+      "title": "More ASAR Documents - Product Specifications"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://earth.esa.int/eogateway/search?skipDetection=true&text=NEST&category=Tools%20and%20toolboxes",
+      "type": "text/html",
+      "title": "ASAR Software Tools - Tools"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://earth.esa.int/eogateway/search?category=tools+and+toolboxes&mission=envisat&tools_type=analysis%2Cprocessing&instrument=asar",
+      "type": "text/html",
+      "title": "ENVISAT Software tools - Software Tools"
+    },
+    {
+      "rel": "describedby",
+      "href": "https://esatellus.service-now.com/csp?id=esa_simple_request",
+      "type": "text/html",
+      "title": "Get Help? - ESA Earth Observation User Services Portal"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/atom%2Bxml",
+      "type": "application/atom+xml",
+      "title": "Atom format"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/xml",
+      "type": "application/xml",
+      "title": "Dublin Core metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/ld%2Bjson;profile=https://schema.org",
+      "type": "application/ld+json;profile=\"https://schema.org\"",
+      "title": "JSON-LD (schema.org) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/ld%2Bjson",
+      "type": "application/ld+json;profile=\"http://data.europa.eu/930/\"",
+      "title": "JSON-LD (GeoDCAT-AP) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/rdf%2Bxml;profile=https://schema.org",
+      "type": "application/rdf+xml;profile=\"https://schema.org\"",
+      "title": "RDF/XML (schema.org) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=application/rdf%2Bxml",
+      "type": "application/rdf+xml;profile=\"http://data.europa.eu/930/\"",
+      "title": "RDF/XML (GeoDCAT-AP) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=text/turtle;profile=https://schema.org",
+      "type": "text/turtle;profile=\"https://schema.org\"",
+      "title": "Turtle (schema.org) metadata"
+    },
+    {
+      "rel": "alternate",
+      "href": "https://eocat.esa.int/eo-catalogue/collections/ENVISAT.ASA.IMS_1P?httpAccept=text/turtle",
+      "type": "text/turtle;profile=\"http://data.europa.eu/930/\"",
+      "title": "Turtle (GeoDCAT-AP) metadata"
+    }
+  ],
+  "item_assets": {
+    "thumbnail": {
+      "roles": ["thumbnail"],
+      "title": "THUMBNAIL",
+      "type": "image/jpeg"
+    },
+    "metadata_ogc_10_157r4": {
+      "roles": ["metadata"],
+      "title": "OGC 10-157r4 metadata",
+      "type": "application/gml+xml;profile=\"http://www.opengis.net/spec/EOMPOM/1.1\""
+    },
+    "enclosure": {
+      "roles": ["data"],
+      "title": "Download",
+      "type": "application/x-binary"
+    },
+    "metadata_ogc_17_003r2": {
+      "roles": ["metadata"],
+      "title": "OGC 17-003r2 metadata",
+      "type": "application/geo+json;profile=\"http://www.opengis.net/spec/eo-geojson/1.0\""
+    },
+    "metadata_iso_19139": {
+      "roles": ["metadata"],
+      "title": "ISO 19139 metadata",
+      "type": "application/vnd.iso.19139+xml"
+    },
+    "metadata_html": {
+      "roles": ["metadata"],
+      "title": "HTML",
+      "type": "text/html"
+    },
+    "quicklook": {
+      "roles": ["overview"],
+      "title": "QUICKLOOK",
+      "type": "image/jpeg"
+    }
+  },
+  "id": "ENVISAT.ASA.IMS_1P",
+  "updated": "2024-11-27T08:30:29Z",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/version/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/web-map-links/v1.2.0/schema.json",
+    "https://stac-extensions.github.io/product/v0.1.0/schema.json",
+    "https://stac-extensions.github.io/sat/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/sar/v1.0.0/schema.json"
+  ],
+  "providers": [
+    {
+      "roles": ["producer"],
+      "name": "ESA/ESRIN",
+      "url": "http://www.esa.int"
+    },
+    {
+      "roles": ["host"],
+      "name": "ESA Catalog",
+      "url": "https://eocat.esa.int/eo-catalogue"
+    }
+  ],
+  "summaries": {
+    "proj:code": ["EPSG:4326"],
+    "sar:instrument_mode": ["IM"],
+    "instruments": ["ASAR"],
+    "sat:orbit_state": [
+      "ASCENDING",
+      "DESCENDING"
+    ],
+    "product:type": ["ASA_IMS_1P"],
+    "platform": ["Envisat"],
+    "product:acquisition_type": ["NOMINAL"],
+    "sar:polarizations": [
+      "HH",
+      "HV",
+      "VH",
+      "VV",
+      "HH, VV",
+      "HH, VH",
+      "HH, HV",
+      "VH, VV",
+      "VH, HV",
+      "VV, HV",
+      "VV, VH",
+      "HV, VH",
+      "UNDEFINED"
+    ]
+  }
+}

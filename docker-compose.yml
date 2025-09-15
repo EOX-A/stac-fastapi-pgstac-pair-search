@@ -55,7 +55,7 @@ services:
         python -m pip install pip -U &&
         python -m pip install requests tqdm pystac_client &&
         python /app/scripts/ingest_test_data.py http://app:8082
-        "
+      "
     depends_on:
       - database
       - app
