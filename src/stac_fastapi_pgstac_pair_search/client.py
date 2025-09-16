@@ -3,7 +3,6 @@ import logging
 from typing import Dict, Any, Optional, Set, List
 
 from asyncpg.exceptions import InvalidDatetimeFormatError
-from buildpg import render
 from fastapi import Request
 from pypgstac.hydration import hydrate
 from stac_fastapi.api.routes import create_async_endpoint
@@ -86,6 +85,23 @@ class PairSearchClient(CoreCrudClient):
 
         return ItemCollection(**item_collection)
 
+    # async def _db_search(self, request: Request, search_json: str) -> Dict[str, Any]:
+    #     try:
+    #         async with request.app.state.get_connection(request, "r") as conn:
+    #             # TODO: implement our own search function
+    #             q, p = render(
+    #                 """
+    #                 SELECT * FROM search(:req::text::jsonb);
+    #                 """,
+    #                 req=search_json,
+    #             )
+    #             items = await conn.fetchval(q, *p)
+    #     except InvalidDatetimeFormatError as e:
+    #         raise InvalidQueryParameter(
+    #             f"Datetime parameter {search_request.datetime} is invalid."
+    #         ) from e
+    #     return items
+
     async def _pair_search_base(
         self, search_request: PairSearchRequest, request: Request
     ) -> ItemCollection:
@@ -107,24 +123,14 @@ class PairSearchClient(CoreCrudClient):
         # search_request.conf = search_request.conf or {}
         # search_request.conf["nohydrate"] = settings.use_api_hydrate
 
-        search_request_json = search_request.model_dump_json(
-            exclude_none=True, by_alias=True
-        )
         try:
             async with request.app.state.get_connection(request, "r") as conn:
-                # TODO: implement our own search function
-                q, p = render(
-                    """
-                    SELECT * FROM search(:req::text::jsonb);
-                    """,
-                    req=search_request_json,
-                )
+                q, p = search_request.render_sql()
                 items = await conn.fetchval(q, *p)
         except InvalidDatetimeFormatError as e:
             raise InvalidQueryParameter(
                 f"Datetime parameter {search_request.datetime} is invalid."
             ) from e
-
         # Starting in pgstac 0.9.0, the `next` and `prev` tokens are returned in spec-compliant links with method GET
         next_from_link: Optional[str] = None
         prev_from_link: Optional[str] = None
@@ -200,6 +206,50 @@ class PairSearchClient(CoreCrudClient):
             prev=prev,
         ).get_links()
         return collection
+
+
+sql_query = """
+WITH search1 AS (
+  -- Perform the first search and expand the returned features into rows
+  SELECT jsonb_array_elements(pgstac.search(
+    :first_req:text::jsonb
+  )->'features') AS feature
+),
+search2 AS (
+  -- Perform the second search
+  SELECT jsonb_array_elements(pgstac.search(
+    :first_req:text::jsonb
+  )->'features') AS feature
+),
+pairs AS (
+  -- Create pairs of item IDs, excluding pairs with the same ID
+  SELECT
+    jsonb_build_array(s1.feature->>'id', s2.feature->>'id') as pair
+  FROM search1 s1, search2 s2
+  WHERE s1.feature->>'id' <> s2.feature->>'id'
+),
+all_features AS (
+  -- Combine all unique features from both searches
+  SELECT feature FROM search1
+  UNION
+  SELECT feature FROM search2
+),
+total_counts AS (
+  -- Pre-calculate counts for the final object
+  SELECT
+    (SELECT count(*) FROM search1) AS count1,
+    (SELECT count(*) FROM search2) AS count2
+)
+SELECT jsonb_build_object(
+  'type', 'FeatureCollection',
+  'featurePairs', (SELECT jsonb_agg(pair) FROM pairs),
+  'features', (SELECT jsonb_agg(feature) FROM all_features),
+  'links', '[]'::jsonb, -- Add links if needed
+  'numberReturned', (SELECT count(*) FROM all_features),
+  'numberPairsReturned', (SELECT count(*) FROM pairs),
+  'numberPairsMatched', (SELECT count1 * count2 FROM total_counts)
+) AS result;
+"""
 
 
 def register_pair_search(api: StacApi):
