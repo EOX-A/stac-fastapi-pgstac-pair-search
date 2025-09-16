@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Annotated, Any, Literal, Union
+from typing import Dict, Optional, List, Annotated, Any, Literal
 
 from fastapi import Query
 from pydantic import Field, AfterValidator, BaseModel, model_validator
@@ -61,10 +61,10 @@ class PairSearchRequest(BaseModel, APIRequest):
     first_ids: Optional[List[str]] = Field(alias="first-ids", default=None)
     second_ids: Optional[List[str]] = Field(alias="second-ids", default=None)
 
-    first_collections: Optional[Union[str, List[str]]] = Field(
+    first_collections: Optional[List[str]] = Field(
         alias="first-collections", default=None
     )
-    second_collections: Optional[Union[str, List[str]]] = Field(
+    second_collections: Optional[List[str]] = Field(
         alias="second-collections", default=None
     )
 
@@ -128,7 +128,10 @@ Remember to URL encode the CQL2-JSON if using GET""",
                 raise ValueError(
                     f"{prefix}-intersects and {prefix}-bbox parameters are mutually exclusive"
                 )
-            return values
+            collections = values.get(f"{prefix}-collections")
+            if isinstance(collections, str):
+                values[f"{prefix}-collections"] = collections.split(",")
+        return values
 
     # @property
     # def spatial_filter(self) -> Optional[Intersection]:

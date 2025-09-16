@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from typing import Dict, Any, Optional, Set, List
 
 from asyncpg.exceptions import InvalidDatetimeFormatError
@@ -17,6 +18,9 @@ from stac_fastapi.types.stac import ItemCollection
 from stac_pydantic.item import Item
 
 from stac_fastapi_pgstac_pair_search.models import PairSearchRequest, PairSearchLinks
+
+
+logger = logging.getLogger(__name__)
 
 
 class PairSearchClient(CoreCrudClient):

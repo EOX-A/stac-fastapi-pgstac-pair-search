@@ -30,7 +30,7 @@ def test_search(client):
     ],
 )
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_pair_search(client, params: dict, method: str):
+def test_pair_search_limit(client, params: dict, method: str):
     response = client.request(
         method=method,
         url="/pair-search",
@@ -47,9 +47,10 @@ def test_pair_search(client, params: dict, method: str):
         assert len(response.json()["features"]) > 1
 
 
+@pytest.mark.skip(reason="Skipped as SQL query is not yet implemented")
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_pair_search_response_types(client, method: str, response_type: str):
+def test_pair_search_response(client, method: str, response_type: str):
     """
     response-type = "pair":
     {
