@@ -1,10 +1,14 @@
+from __future__ import annotations
+import logging
 from typing import Dict, Any, Optional, Set, List
 
 from asyncpg.exceptions import InvalidDatetimeFormatError
 from buildpg import render
 from fastapi import Request
 from pypgstac.hydration import hydrate
-from stac_fastapi.api.models import JSONResponse
+from stac_fastapi.api.routes import create_async_endpoint
+from stac_fastapi.api.models import GeoJSONResponse, JSONResponse
+from stac_fastapi.pgstac.app import StacApi
 from stac_fastapi.pgstac.config import Settings
 from stac_fastapi.pgstac.core import CoreCrudClient
 from stac_fastapi.pgstac.models.links import ItemLinks, PagingLinks
@@ -16,6 +20,9 @@ from stac_pydantic.item import Item
 from stac_fastapi_pgstac_pair_search.models import PairSearchRequest, PairSearchLinks
 
 
+logger = logging.getLogger(__name__)
+
+
 class PairSearchClient(CoreCrudClient):
     """A custom client for pair searching."""
 
@@ -24,11 +31,11 @@ class PairSearchClient(CoreCrudClient):
     async def get_pair_search(
         self,
         request: Request,
-        **kwargs: Any,
+        **__: Any,
     ) -> ItemCollection:
         """Cross catalog search (GET).
 
-        Called with `GET /search`.
+        Called with `GET /pair-search`.
 
         Args:
             search_request: search request parameters.
@@ -36,8 +43,9 @@ class PairSearchClient(CoreCrudClient):
         Returns:
             ItemCollection containing items which match the search criteria.
         """
-        item_collection = await self._search_base(
-            PairSearchRequest.model_validate(kwargs), request=request
+        item_collection = await self._pair_search_base(
+            PairSearchRequest.model_validate(request.query_params._dict, by_alias=True),
+            request=request,
         )
         links = await PairSearchLinks(request=request).get_links(
             extra_links=item_collection["links"]
@@ -47,9 +55,8 @@ class PairSearchClient(CoreCrudClient):
 
     async def post_pair_search(
         self,
-        search_request: PairSearchRequest,
         request: Request,
-        **kwargs: Any,
+        **__: Any,
     ) -> ItemCollection:
         """Cross catalog search (POST).
 
@@ -61,8 +68,9 @@ class PairSearchClient(CoreCrudClient):
         Returns:
             ItemCollection containing items which match the search criteria.
         """
-        search_request = PairSearchRequest.model_validate(kwargs)
-        item_collection = await self._search_base(search_request, request=request)
+        body = await request.body()
+        search_request = PairSearchRequest.model_validate_json(body, by_alias=True)
+        item_collection = await self._pair_search_base(search_request, request=request)
 
         # If we have the `fields` extension enabled
         # we need to avoid Pydantic validation because the
@@ -78,7 +86,7 @@ class PairSearchClient(CoreCrudClient):
 
         return ItemCollection(**item_collection)
 
-    async def _search_base(
+    async def _pair_search_base(
         self, search_request: PairSearchRequest, request: Request
     ) -> ItemCollection:
         """Cross catalog pair search (GET).
@@ -102,7 +110,6 @@ class PairSearchClient(CoreCrudClient):
         search_request_json = search_request.model_dump_json(
             exclude_none=True, by_alias=True
         )
-
         try:
             async with request.app.state.get_connection(request, "r") as conn:
                 # TODO: implement our own search function
@@ -192,5 +199,59 @@ class PairSearchClient(CoreCrudClient):
             next=next,
             prev=prev,
         ).get_links()
-
         return collection
+
+
+def register_pair_search(api: StacApi):
+    # initialize the client
+    pair_search_client = PairSearchClient(
+        stac_version=api.stac_version,
+        landing_page_id=api.settings.stac_fastapi_landing_id,
+        title=api.settings.stac_fastapi_title,
+        description=api.settings.stac_fastapi_description,
+        extensions=api.extensions,
+    )
+
+    # POST /pair-search
+    api.app.add_api_route(
+        name="Pair Search",
+        path="/pair-search",
+        response_model=ItemCollection if api.settings.enable_response_models else None,
+        responses={
+            200: {
+                "content": {
+                    "application/geo+json": {},
+                },
+                "model": ItemCollection,
+            },
+        },
+        response_class=GeoJSONResponse,
+        response_model_exclude_unset=True,
+        response_model_exclude_none=True,
+        methods=["POST"],
+        endpoint=create_async_endpoint(
+            pair_search_client.post_pair_search, PairSearchRequest
+        ),
+    )
+
+    # GET /pair-search
+    api.app.add_api_route(
+        name="Pair Search",
+        path="/pair-search",
+        response_model=ItemCollection if api.settings.enable_response_models else None,
+        responses={
+            200: {
+                "content": {
+                    "application/geo+json": {},
+                },
+                "model": ItemCollection,
+            },
+        },
+        response_class=GeoJSONResponse,
+        response_model_exclude_unset=True,
+        response_model_exclude_none=True,
+        methods=["GET"],
+        endpoint=create_async_endpoint(
+            pair_search_client.get_pair_search, PairSearchRequest
+        ),
+    )
