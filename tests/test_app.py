@@ -127,6 +127,12 @@ def test_pair_search_response(client, method: str, response_type: str):
 
     response_json = response.json()
 
+    assert "numberPairsReturned" in response_json
+    assert response_json["numberPairsReturned"] > 0
+
+    assert "numberPairsMatched" in response_json
+    assert response_json["numberPairsMatched"] > 0
+
     if response_type == "pair":
         assert "featurePairs" in response_json
         feature_pairs = response_json["featurePairs"]
@@ -134,11 +140,12 @@ def test_pair_search_response(client, method: str, response_type: str):
         assert feature_pairs
         assert all(isinstance(pair, list) and len(pair) == 2 for pair in feature_pairs)
 
-    assert "numberPairsReturned" in response_json
-    assert response_json["numberPairsReturned"] > 0
+        assert len(feature_pairs) == response_json["numberPairsReturned"]
 
-    assert "numberPairsMatched" in response_json
-    assert response_json["numberPairsMatched"] > 0
+        # make sure all item ids in featurePairs are present in features
+        pair_feature_ids = {item_id for pair in feature_pairs for item_id in pair}
+        feature_ids = {feature["id"] for feature in response_json["features"]}
+        assert pair_feature_ids == feature_ids
 
 
 # https://pair-search-demo.eox.at/catalogue/pair-search?
