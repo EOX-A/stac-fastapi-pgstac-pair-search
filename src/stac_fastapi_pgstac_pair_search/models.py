@@ -61,8 +61,12 @@ class PairSearchRequest(BaseModel, APIRequest):
     first_ids: Optional[List[str]] = Field(alias="first-ids", default=None)
     second_ids: Optional[List[str]] = Field(alias="second-ids", default=None)
 
-    first_collections: Union[str, List[str]] = Field(alias="first-collections")
-    second_collections: Union[str, List[str]] = Field(alias="second-collections")
+    first_collections: Optional[Union[str, List[str]]] = Field(
+        alias="first-collections", default=None
+    )
+    second_collections: Optional[Union[str, List[str]]] = Field(
+        alias="second-collections", default=None
+    )
 
     response_type: Optional[Literal["pair", "first-only", "second-only"]] = Field(
         alias="response-type", default="pair"
