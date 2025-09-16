@@ -1,8 +1,9 @@
 from __future__ import annotations
 import logging
-from typing import Dict, Any, Optional, Set, List
+from typing import Dict, Any, Optional, Set, List, Tuple
 
 from asyncpg.exceptions import InvalidDatetimeFormatError
+from buildpg import render
 from fastapi import Request
 from pypgstac.hydration import hydrate
 from stac_fastapi.api.routes import create_async_endpoint
@@ -85,23 +86,6 @@ class PairSearchClient(CoreCrudClient):
 
         return ItemCollection(**item_collection)
 
-    # async def _db_search(self, request: Request, search_json: str) -> Dict[str, Any]:
-    #     try:
-    #         async with request.app.state.get_connection(request, "r") as conn:
-    #             # TODO: implement our own search function
-    #             q, p = render(
-    #                 """
-    #                 SELECT * FROM search(:req::text::jsonb);
-    #                 """,
-    #                 req=search_json,
-    #             )
-    #             items = await conn.fetchval(q, *p)
-    #     except InvalidDatetimeFormatError as e:
-    #         raise InvalidQueryParameter(
-    #             f"Datetime parameter {search_request.datetime} is invalid."
-    #         ) from e
-    #     return items
-
     async def _pair_search_base(
         self, search_request: PairSearchRequest, request: Request
     ) -> ItemCollection:
@@ -125,8 +109,8 @@ class PairSearchClient(CoreCrudClient):
 
         try:
             async with request.app.state.get_connection(request, "r") as conn:
-                q, p = search_request.render_sql()
-                items = await conn.fetchval(q, *p)
+                query, params = render_sql(search_request)
+                items = await conn.fetchval(query, *params)
         except InvalidDatetimeFormatError as e:
             raise InvalidQueryParameter(
                 f"Datetime parameter {search_request.datetime} is invalid."
@@ -208,48 +192,59 @@ class PairSearchClient(CoreCrudClient):
         return collection
 
 
-sql_query = """
-WITH search1 AS (
-  -- Perform the first search and expand the returned features into rows
-  SELECT jsonb_array_elements(pgstac.search(
-    :first_req:text::jsonb
-  )->'features') AS feature
-),
-search2 AS (
-  -- Perform the second search
-  SELECT jsonb_array_elements(pgstac.search(
-    :first_req:text::jsonb
-  )->'features') AS feature
-),
-pairs AS (
-  -- Create pairs of item IDs, excluding pairs with the same ID
-  SELECT
-    jsonb_build_array(s1.feature->>'id', s2.feature->>'id') as pair
-  FROM search1 s1, search2 s2
-  WHERE s1.feature->>'id' <> s2.feature->>'id'
-),
-all_features AS (
-  -- Combine all unique features from both searches
-  SELECT feature FROM search1
-  UNION
-  SELECT feature FROM search2
-),
-total_counts AS (
-  -- Pre-calculate counts for the final object
-  SELECT
-    (SELECT count(*) FROM search1) AS count1,
-    (SELECT count(*) FROM search2) AS count2
-)
-SELECT jsonb_build_object(
-  'type', 'FeatureCollection',
-  'featurePairs', (SELECT jsonb_agg(pair) FROM pairs),
-  'features', (SELECT jsonb_agg(feature) FROM all_features),
-  'links', '[]'::jsonb, -- Add links if needed
-  'numberReturned', (SELECT count(*) FROM all_features),
-  'numberPairsReturned', (SELECT count(*) FROM pairs),
-  'numberPairsMatched', (SELECT count1 * count2 FROM total_counts)
-) AS result;
-"""
+def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
+    if pair_search_request.response_type == "pair":
+        return render(
+            """
+                WITH search1 AS (
+                SELECT jsonb_array_elements(pgstac.search(:first_req::text::jsonb)->'features') AS feature
+                ),
+                search2 AS (
+                SELECT jsonb_array_elements(pgstac.search(:second_req::text::jsonb)->'features') AS feature
+                ),
+                all_pairs AS (
+                -- Create all possible pairs, selecting individual features and their IDs
+                SELECT
+                    s1.feature->>'id' AS id1,
+                    s2.feature->>'id' AS id2,
+                    s1.feature AS feature1,
+                    s2.feature AS feature2
+                FROM search1 s1, search2 s2
+                WHERE s1.feature->>'id' <> s2.feature->>'id'
+                ),
+                limited_pairs AS (
+                -- Apply the user-defined limit to the generated pairs
+                SELECT id1, id2, feature1, feature2
+                FROM all_pairs
+                LIMIT :limit::integer
+                ),
+                all_features AS (
+                -- Collect only the unique features that are part of the limited pairs
+                SELECT feature1 AS feature FROM limited_pairs
+                UNION -- UNION automatically selects distinct features
+                SELECT feature2 AS feature FROM limited_pairs
+                )
+                SELECT jsonb_build_object(
+                    'type', 'FeatureCollection',
+                    'featurePairs', (SELECT jsonb_agg(jsonb_build_array(id1, id2)) FROM limited_pairs),
+                    'features', (SELECT jsonb_agg(feature) FROM all_features),
+                    'links', '[]'::jsonb,
+                    'numberReturned', (SELECT count(*) FROM all_features),
+                    'numberPairsReturned', (SELECT count(*) FROM limited_pairs),
+                    'numberPairsMatched', (SELECT count(*) FROM all_pairs)
+                ) AS result;
+                """,
+            first_req=pair_search_request.first_search_params().model_dump_json(
+                exclude_none=True, by_alias=True
+            ),
+            second_req=pair_search_request.second_search_params().model_dump_json(
+                exclude_none=True, by_alias=True
+            ),
+            limit=pair_search_request.limit or 10,
+        )
+    raise NotImplementedError(
+        f"Rendering SQL for response_type={pair_search_request.response_type} is not implemented"
+    )
 
 
 def register_pair_search(api: StacApi):

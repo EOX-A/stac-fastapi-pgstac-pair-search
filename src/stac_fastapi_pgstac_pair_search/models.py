@@ -1,6 +1,5 @@
-from typing import Dict, Optional, List, Annotated, Any, Literal, Tuple
+from typing import Dict, Optional, List, Annotated, Any, Literal
 
-from buildpg import render
 from fastapi import Query
 from pydantic import Field, AfterValidator, BaseModel, model_validator
 from datetime import datetime as dt
@@ -163,60 +162,6 @@ Remember to URL encode the CQL2-JSON if using GET""",
             intersects=self.second_intersects,
             ids=self.second_ids,
             collections=self.second_collections,
-        )
-
-    def render_sql(self) -> Tuple[str, List[Any]]:
-        if self.response_type == "pair":
-            return render(
-                """
-                WITH search1 AS (
-                SELECT jsonb_array_elements(pgstac.search(:first_req::text::jsonb)->'features') AS feature
-                ),
-                search2 AS (
-                SELECT jsonb_array_elements(pgstac.search(:second_req::text::jsonb)->'features') AS feature
-                ),
-                all_pairs AS (
-                -- Create all possible pairs, selecting individual features and their IDs
-                SELECT
-                    s1.feature->>'id' AS id1,
-                    s2.feature->>'id' AS id2,
-                    s1.feature AS feature1,
-                    s2.feature AS feature2
-                FROM search1 s1, search2 s2
-                WHERE s1.feature->>'id' <> s2.feature->>'id'
-                ),
-                limited_pairs AS (
-                -- Apply the user-defined limit to the generated pairs
-                SELECT id1, id2, feature1, feature2
-                FROM all_pairs
-                LIMIT :limit::integer
-                ),
-                all_features AS (
-                -- Collect only the unique features that are part of the limited pairs
-                SELECT feature1 AS feature FROM limited_pairs
-                UNION -- UNION automatically selects distinct features
-                SELECT feature2 AS feature FROM limited_pairs
-                )
-                SELECT jsonb_build_object(
-                'type', 'FeatureCollection',
-                'featurePairs', (SELECT jsonb_agg(jsonb_build_array(id1, id2)) FROM limited_pairs),
-                'features', (SELECT jsonb_agg(feature) FROM all_features),
-                'links', '[]'::jsonb,
-                'numberReturned', (SELECT count(*) FROM all_features),
-                'numberPairsReturned', (SELECT count(*) FROM limited_pairs),
-                'numberPairsMatched', (SELECT count(*) FROM all_pairs)
-                ) AS result;
-                """,
-                first_req=self.first_search_params().model_dump_json(
-                    exclude_none=True, by_alias=True
-                ),
-                second_req=self.second_search_params().model_dump_json(
-                    exclude_none=True, by_alias=True
-                ),
-                limit=self.limit or 10,
-            )
-        raise NotImplementedError(
-            f"Rendering SQL for response_type={self.response_type} is not implemented"
         )
 
 
