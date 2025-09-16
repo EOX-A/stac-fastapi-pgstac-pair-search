@@ -128,7 +128,10 @@ Remember to URL encode the CQL2-JSON if using GET""",
                 raise ValueError(
                     f"{prefix}-intersects and {prefix}-bbox parameters are mutually exclusive"
                 )
-            return values
+            collections = values.get(f"{prefix}-collections")
+            if isinstance(collections, str):
+                values[f"{prefix}-collections"] = collections.split(",")
+        return values
 
     # @property
     # def spatial_filter(self) -> Optional[Intersection]:
