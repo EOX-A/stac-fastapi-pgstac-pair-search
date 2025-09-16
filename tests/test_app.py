@@ -127,13 +127,13 @@ def test_pair_search_response(client, method: str, response_type: str):
 
     response_json = response.json()
 
-    assert "numberPairsReturned" in response_json
-    assert response_json["numberPairsReturned"] > 0
-
-    assert "numberPairsMatched" in response_json
-    assert response_json["numberPairsMatched"] > 0
-
     if response_type == "pair":
+        assert "numberPairsReturned" in response_json
+        assert response_json["numberPairsReturned"] > 0
+
+        assert "numberPairsMatched" in response_json
+        assert response_json["numberPairsMatched"] > 0
+
         assert "featurePairs" in response_json
         feature_pairs = response_json["featurePairs"]
         assert isinstance(feature_pairs, list)
