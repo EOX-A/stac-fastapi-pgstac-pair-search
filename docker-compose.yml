@@ -46,6 +46,11 @@ services:
     image: vs-pair-search
     environment:
       - ENVIRONMENT=development
+      - PGUSER=username
+      - PGPASSWORD=password
+      - PGDATABASE=postgis
+      - PGHOST=database
+      - PGPORT=5432
     volumes:
       - ./stac_fastapi:/app/stac_fastapi
       - ./scripts:/app/scripts
@@ -53,7 +58,7 @@ services:
       /bin/sh -c "
         ./scripts/wait-for-it.sh -t 60 app:8082 &&
         python -m pip install pip -U &&
-        python -m pip install requests tqdm pystac_client &&
+        python -m pip install requests tqdm pystac_client pypgstac[psycopg] &&
         python /app/scripts/ingest_test_data.py http://app:8082
       "
     depends_on:

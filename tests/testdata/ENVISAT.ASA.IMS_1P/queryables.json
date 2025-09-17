@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://example.com/stac/queryables",
+  "type": "object",
+  "title": "Test Queryables for PgSTAC",
+  "description": "Test queryable names for PgSTAC",
+  "properties": {
+    "id": {
+      "description": "Item identifier",
+      "type": "string"
+    },
+    "collection": {
+      "description": "Collection identifier",
+      "type": "string"
+    },
+    "datetime": {
+      "description": "Datetime",
+      "type": "string",
+      "format": "date-time"
+    },
+    "geometry": {
+      "description": "Geometry",
+      "type": "object"
+    },
+    "start_datetime": {
+      "description": "Begin of acquisition",
+      "type": "string",
+      "format": "date-time"
+    },
+    "end_datetime": {
+      "description": "End of acquisition",
+      "type": "string",
+      "format": "date-time"
+    },
+    "grid:code": {
+      "description": "WRS grid code",
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

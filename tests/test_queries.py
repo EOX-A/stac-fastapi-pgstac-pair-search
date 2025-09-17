@@ -166,7 +166,7 @@ def test_05_same_track(client, method: str, control_05: list):
 
 @pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_06_same_track(client, method: str, control_06: list):
+def test_06_timedelta_overlap(client, method: str, control_06: list):
     """
     Test 06: second product more than 35 days after first and 75% area overlap
 

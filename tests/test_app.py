@@ -15,6 +15,13 @@ def test_search(client):
     assert response.json()
 
 
+def test_collection_queryables(client):
+    response = client.get("/collections/ENVISAT.ASA.IMS_1P/queryables")
+    assert response.status_code == 200
+    assert response.json()
+    assert "grid:code" in response.json()["properties"]
+
+
 @pytest.mark.parametrize(
     "params",
     [
