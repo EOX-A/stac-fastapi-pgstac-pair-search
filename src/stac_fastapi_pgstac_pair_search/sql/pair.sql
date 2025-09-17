@@ -7,20 +7,20 @@ search2 AS (
     SELECT jsonb_array_elements(pgstac.search(:second_req::text::jsonb)->'features') AS feature
 ),
 all_pairs AS (
--- Create all possible pairs, selecting individual features and their IDs
-SELECT
-    s1.feature->>'id' AS id1,
-    s2.feature->>'id' AS id2,
-    s1.feature AS feature1,
-    s2.feature AS feature2
-FROM search1 s1, search2 s2
-WHERE s1.feature->>'id' <> s2.feature->>'id'
+    -- Create all possible pairs, selecting individual features and their IDs
+    SELECT
+        s1.feature->>'id' AS id1,
+        s2.feature->>'id' AS id2,
+        s1.feature AS feature1,
+        s2.feature AS feature2
+    FROM search1 s1, search2 s2
+    WHERE s1.feature->>'id' <> s2.feature->>'id'
 ),
 limited_pairs AS (
--- Apply the user-defined limit to the generated pairs
-SELECT id1, id2, feature1, feature2
-FROM all_pairs
-LIMIT :limit::integer
+    -- Apply the user-defined limit to the generated pairs
+    SELECT id1, id2, feature1, feature2
+    FROM all_pairs
+    LIMIT :limit::integer
 ),
 all_features AS (
 -- Collect only the unique features that are part of the limited pairs

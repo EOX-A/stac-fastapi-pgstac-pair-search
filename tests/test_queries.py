@@ -3,7 +3,10 @@ import json
 import pytest
 
 
-def assert_pairs_match_control(client, method: str, params: dict, control: list):
+def assert_pairs_match_control(
+    client, method: str, response_type: str, params: dict, control: list
+):
+    params["response-type"] = response_type
     response = client.request(
         method=method,
         url="/pair-search",
@@ -15,14 +18,30 @@ def assert_pairs_match_control(client, method: str, params: dict, control: list)
 
     response_json = response.json()
 
-    assert response_json["numberPairsReturned"] == len(control)
-    feature_pairs = response_json["featurePairs"]
-    assert len(feature_pairs) == len(control)
-    assert set(map(tuple, feature_pairs)) == set(map(tuple, control))
+    if response_type == "pair":
+        assert response_json["numberPairsReturned"] == len(control)
+        feature_pairs = response_json["featurePairs"]
+        assert len(feature_pairs) == len(control)
+        assert set(map(tuple, feature_pairs)) == set(map(tuple, control))
+
+    elif response_type == "first-only":
+        features = response_json["features"]
+        assert len(features) == len(control)
+        feature_ids = {feature["id"] for feature in features}
+        control_ids = {first for first, _ in control}
+        assert feature_ids == control_ids
+
+    elif response_type == "second-only":
+        features = response_json["features"]
+        assert len(features) == len(control)
+        feature_ids = {feature["id"] for feature in features}
+        control_ids = {second for _, second in control}
+        assert feature_ids == control_ids
 
 
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_00_no_constraints(client, method: str, control_00: list):
+@pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
+def test_00_no_constraints(client, method: str, response_type: str, control_00: list):
     """
     Test 00: No constraints
 
@@ -33,10 +52,10 @@ def test_00_no_constraints(client, method: str, control_00: list):
     assert_pairs_match_control(
         client,
         method,
+        response_type,
         {
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
-            "response-type": "pair",
             "limit": 100,
         },
         control_00,
@@ -53,6 +72,7 @@ def test_01_pair_order(client, method: str, control_01: list):
     query:      SELECT first.productId,second.productId FROM searchables AS first,searchables AS second WHERE first.ROWID != second.ROWID AND second.beginAcquisition > first.beginAcquisition
     parameters: []
     """
+    #   filter=((N_DIFF(second.oads:baseline_perpendicular_offset, first.oads:baseline_perpendicular_offset) BETWEEN-500 AND 500) AND (T_DIFF(T_START(first.datetime),T_START(seconds.datetime)) BETWEEN TimeDelta('0D') ANDTimeDelta('356D') AND (first.sat:orbit_state = second.sat:orbit_state)AND (first.sar:beam_id = second.sar:beam_id) AND(first.sar:polarization = second.sar:polarization) AND(first.oads:wrs_longitude_grid = second.oads:wrs_longitude_grid) AND(first.oads:wrs_latitude_grid = second.oads:wrs_latitude_grid) AND(first.oads:mission_phase = second.oads:mission_phase))
     assert_pairs_match_control(
         client,
         method,
@@ -61,7 +81,7 @@ def test_01_pair_order(client, method: str, control_01: list):
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 100,
-            "filter": None,  # TODO: add actual filter
+            "filter": "second.datetime > first.datetime",
         },
         control_01,
     )

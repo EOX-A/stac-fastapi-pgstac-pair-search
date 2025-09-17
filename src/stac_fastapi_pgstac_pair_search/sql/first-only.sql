@@ -6,28 +6,23 @@ search2 AS (
     -- Perform the second search
     SELECT jsonb_array_elements(pgstac.search(:second_req::text::jsonb)->'features') AS feature
 ),
-first_features_of_pairs AS (
-    -- Find all unique features from the first search that have at least
-    -- one non-identical partner in the second search. The EXISTS clause
-    -- is efficient as it stops searching as soon as a match is found.
-    SELECT s1.feature
-    FROM search1 s1
-    WHERE EXISTS (
-        SELECT 1
-        FROM search2 s2
-        WHERE s1.feature->>'id' <> s2.feature->>'id'
-    )
+all_pairs AS (
+    -- Create all possible pairs, selecting individual features and their IDs
+    SELECT
+        s1.feature->>'id' AS id1,
+        s2.feature->>'id' AS id2,
+        s1.feature AS feature1,
+        s2.feature AS feature2
+    FROM search1 s1, search2 s2
+    WHERE s1.feature->>'id' <> s2.feature->>'id'
 ),
-limited_features AS (
-    -- Apply the user-defined limit to the features found
-    SELECT feature
-    FROM first_features_of_pairs
-    LIMIT :limit::integer
+limited_first_features AS (
+    SELECT feature1 AS feature FROM all_pairs LIMIT :limit::integer
 )
 SELECT jsonb_build_object(
     'type', 'FeatureCollection',
-    'features', (SELECT jsonb_agg(feature) FROM limited_features),
+    'features', (SELECT jsonb_agg(feature) FROM limited_first_features),
     'links', '[]'::jsonb,
-    'numberReturned', (SELECT count(*) FROM limited_features),
-    'numberMatched', (SELECT count(*) FROM first_features_of_pairs)
+    'numberReturned', (SELECT count(*) FROM limited_first_features),
+    'numberMatched', (SELECT count(*) FROM all_pairs)
 ) AS result;

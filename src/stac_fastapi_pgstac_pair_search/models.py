@@ -86,7 +86,7 @@ Remember to URL encode the CQL2-JSON if using GET""",
                 },
             },
         ),
-    ] = None
+    ] = Field(alias="filter", default=None)
     filter_crs: Annotated[
         Optional[str],
         Query(

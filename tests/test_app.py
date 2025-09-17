@@ -51,10 +51,9 @@ def test_pair_search_limit(client, params: dict, method: str):
     if "limit" in params:
         assert len(response.json()["featurePairs"]) == params["limit"]
     else:
-        assert len(response.json()["featurePairs"]) > 1
+        assert len(response.json()["featurePairs"]) == 10
 
 
-# @pytest.mark.skip(reason="Skipped as SQL query is not yet implemented")
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_pair_search_response(client, method: str, response_type: str):
