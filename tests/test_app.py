@@ -147,6 +147,10 @@ def test_pair_search_response(client, method: str, response_type: str):
         feature_ids = {feature["id"] for feature in response_json["features"]}
         assert pair_feature_ids == feature_ids
 
+        # make sure pairs do not contain identical items
+        for first, second in feature_pairs:
+            assert first != second
+
 
 # https://pair-search-demo.eox.at/catalogue/pair-search?
 #   response-type=pair&

@@ -1,7 +1,9 @@
 WITH search1 AS (
+    -- Perform the first search
     SELECT jsonb_array_elements(pgstac.search(:first_req::text::jsonb)->'features') AS feature
 ),
 search2 AS (
+    -- Perform the second search
     SELECT jsonb_array_elements(pgstac.search(:second_req::text::jsonb)->'features') AS feature
 ),
 all_pairs AS (
