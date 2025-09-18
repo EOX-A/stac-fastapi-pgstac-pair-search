@@ -88,7 +88,6 @@ def test_01_pair_order(client, method: str, response_type: str, control_01: list
     )
 
 
-@pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
 def test_02_area_overlap(client, method: str, response_type: str, control_02: list):
@@ -108,13 +107,12 @@ def test_02_area_overlap(client, method: str, response_type: str, control_02: li
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 100,
-            "filter": None,  # TODO: add actual filter
+            "filter": "S_RAOVERLAP(first.geometry, second.geometry, 'min') > 0.75",
         },
         control_02,
     )
 
 
-@pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
 def test_03_wrs_grid(client, method: str, response_type: str, control_03: list):
@@ -134,13 +132,12 @@ def test_03_wrs_grid(client, method: str, response_type: str, control_03: list):
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 100,
-            "filter": None,  # TODO: add actual filter
+            "filter": "first.grid:code = second.grid:code",
         },
         control_03,
     )
 
 
-@pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
 def test_04_timedelta(client, method: str, response_type: str, control_04: list):
@@ -161,13 +158,12 @@ def test_04_timedelta(client, method: str, response_type: str, control_04: list)
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 100,
-            "filter": None,  # TODO: add actual filter
+            "filter": "T_DIFF(first.datetime, second.datetime) > 3024000000",
         },
         control_04,
     )
 
 
-@pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
 def test_05_same_track(client, method: str, response_type: str, control_05: list):
@@ -187,13 +183,12 @@ def test_05_same_track(client, method: str, response_type: str, control_05: list
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 100,
-            "filter": None,  # TODO: add actual filter
+            "filter": "first.grid:code = second.grid:code and second.datetime > first.datetime",
         },
         control_05,
     )
 
 
-@pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
 def test_06_timedelta_overlap(
@@ -216,7 +211,7 @@ def test_06_timedelta_overlap(
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 100,
-            "filter": None,  # TODO: add actual filter
+            "filter": "T_DIFF(first.datetime, second.datetime) > 3024000000 and S_RAOVERLAP(first.geometry, second.geometry, 'min') > 0.75",
         },
         control_06,
     )

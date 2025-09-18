@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 import re
-from typing import Dict, Any, Optional, Set, List, Tuple
+from typing import Dict, Any, Optional, Set, List, Tuple, Union
 
 from asyncpg.exceptions import InvalidDatetimeFormatError
 from buildpg import render
@@ -202,7 +202,9 @@ class PairSearchClient(CoreCrudClient):
 
 def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
     return render(
-        pair_search_sql.replace("{filter_expr}", cql2_to_sql(pair_search_request)),
+        pair_search_sql.replace(
+            "{filter_expr}", cql2_to_sql(pair_search_request.filter_expr)
+        ),
         first_req=pair_search_request.first_search_params().model_dump_json(
             exclude_none=True, by_alias=True
         ),
@@ -215,20 +217,21 @@ def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
     )
 
 
-def cql2_to_sql(pair_search_request: PairSearchRequest) -> str:
+def cql2_to_sql(filter_expr: Union[str, None]) -> str:
     """
     Convert instances of first.<property> to first->>'<property>'.
     """
-    if pair_search_request.filter_expr:
-        # (first->>'datetime') > (second->>'datetime')
-        raw_query = "AND " + cql2.Expr(pair_search_request.filter_expr).to_sql().query
-        logger.debug(raw_query)
-        cleaned_query = re.sub(
-            r'"?(first|second)\.(\w+)"*', r"\1.feature->'properties'->>'\2'", raw_query
-        )
-        logger.debug(cleaned_query)
-        return cleaned_query
-    return ""
+    if filter_expr is None:
+        return ""
+
+    # (first->>'datetime') > (second->>'datetime')
+    raw_query = "AND " + cql2.Expr(filter_expr).to_sql().query
+    logger.debug(raw_query)
+    cleaned_query = re.sub(
+        r'"?(first|second)\.(\w+)"*', r"\1.feature->'properties'->>'\2'", raw_query
+    )
+    logger.debug(cleaned_query)
+    return cleaned_query
 
 
 def register_pair_search(api: StacApi):
