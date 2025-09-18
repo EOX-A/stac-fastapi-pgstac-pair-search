@@ -76,7 +76,9 @@ class PairSearchClient(CoreCrudClient):
             ItemCollection containing items which match the search criteria.
         """
         body = await request.body()
-        search_request = PairSearchRequest.model_validate_json(body, by_alias=True)
+        search_request = PairSearchRequest.model_validate_json(
+            body.decode(), by_alias=True
+        )
         item_collection = await self._pair_search_base(search_request, request=request)
 
         # If we have the `fields` extension enabled
@@ -113,6 +115,13 @@ class PairSearchClient(CoreCrudClient):
         # TODO: don't know where this .conf is coming from
         # search_request.conf = search_request.conf or {}
         # search_request.conf["nohydrate"] = settings.use_api_hydrate
+
+        # load pair_search SQL function
+        # TODO: do this while setting up the database. we keep it here for now for debugging.
+        async with request.app.state.get_connection(request, "r") as conn:
+            await conn.fetchval(
+                (Path(__file__).parent / "sql" / "pair_search.sql").read_text()
+            )
 
         try:
             async with request.app.state.get_connection(request, "r") as conn:
@@ -200,41 +209,16 @@ class PairSearchClient(CoreCrudClient):
 
 
 def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
-    if pair_search_request.response_type == "pair":
-        return render(
-            sql_pair_template,
-            first_req=pair_search_request.first_search_params().model_dump_json(
-                exclude_none=True, by_alias=True
-            ),
-            second_req=pair_search_request.second_search_params().model_dump_json(
-                exclude_none=True, by_alias=True
-            ),
-            limit=pair_search_request.limit or 10,
-        )
-    elif pair_search_request.response_type == "first-only":
-        return render(
-            sql_first_only_template,
-            first_req=pair_search_request.first_search_params().model_dump_json(
-                exclude_none=True, by_alias=True
-            ),
-            second_req=pair_search_request.second_search_params().model_dump_json(
-                exclude_none=True, by_alias=True
-            ),
-            limit=pair_search_request.limit or 10,
-        )
-    elif pair_search_request.response_type == "second-only":
-        return render(
-            sql_second_only_template,
-            first_req=pair_search_request.first_search_params().model_dump_json(
-                exclude_none=True, by_alias=True
-            ),
-            second_req=pair_search_request.second_search_params().model_dump_json(
-                exclude_none=True, by_alias=True
-            ),
-            limit=pair_search_request.limit or 10,
-        )
-    raise KeyError(
-        f"Rendering SQL for response_type={pair_search_request.response_type} is not available."
+    return render(
+        "SELECT pair_search(:first_req, :second_req, :limit, :response_type);",
+        first_req=pair_search_request.first_search_params().model_dump_json(
+            exclude_none=True, by_alias=True
+        ),
+        second_req=pair_search_request.second_search_params().model_dump_json(
+            exclude_none=True, by_alias=True
+        ),
+        limit=pair_search_request.limit or 10,
+        response_type=pair_search_request.response_type,
     )
 
 
