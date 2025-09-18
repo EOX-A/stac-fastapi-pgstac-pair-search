@@ -1409,6 +1409,7 @@ name = "stac-fastapi-pgstac-pair-search"
 version = "2025.9.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cql2" },
     { name = "stac-fastapi-pgstac" },
     { name = "uvicorn" },
 ]
@@ -1427,6 +1428,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cql2", specifier = ">=0.3.7" },
     { name = "stac-fastapi-pgstac", specifier = ">=6.0.0" },
     { name = "uvicorn", specifier = ">=0.35.0" },
 ]

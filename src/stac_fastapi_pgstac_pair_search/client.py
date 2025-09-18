@@ -1,10 +1,12 @@
 from __future__ import annotations
 import logging
 from pathlib import Path
+import re
 from typing import Dict, Any, Optional, Set, List, Tuple
 
 from asyncpg.exceptions import InvalidDatetimeFormatError
 from buildpg import render
+import cql2
 from fastapi import Request
 from pypgstac.hydration import hydrate
 from stac_fastapi.api.routes import create_async_endpoint
@@ -22,6 +24,9 @@ from stac_fastapi_pgstac_pair_search.models import PairSearchRequest, PairSearch
 
 
 logger = logging.getLogger(__name__)
+
+
+pair_search_sql = (Path(__file__).parent / "sql" / "pair_search.sql").read_text()
 
 
 class PairSearchClient(CoreCrudClient):
@@ -110,13 +115,6 @@ class PairSearchClient(CoreCrudClient):
         # search_request.conf = search_request.conf or {}
         # search_request.conf["nohydrate"] = settings.use_api_hydrate
 
-        # load pair_search SQL function
-        # TODO: do this while setting up the database. we keep it here for now for debugging.
-        async with request.app.state.get_connection(request, "r") as conn:
-            await conn.fetchval(
-                (Path(__file__).parent / "sql" / "pair_search.sql").read_text()
-            )
-
         try:
             async with request.app.state.get_connection(request, "r") as conn:
                 query, params = render_sql(search_request)
@@ -204,16 +202,33 @@ class PairSearchClient(CoreCrudClient):
 
 def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
     return render(
-        "SELECT pair_search(:first_req, :second_req, :limit, :response_type);",
+        pair_search_sql.replace("{filter_expr}", cql2_to_sql(pair_search_request)),
         first_req=pair_search_request.first_search_params().model_dump_json(
             exclude_none=True, by_alias=True
         ),
         second_req=pair_search_request.second_search_params().model_dump_json(
             exclude_none=True, by_alias=True
         ),
+        # filter=pair_search_request.filter_expr,
         limit=pair_search_request.limit or 10,
         response_type=pair_search_request.response_type,
     )
+
+
+def cql2_to_sql(pair_search_request: PairSearchRequest) -> str:
+    """
+    Convert instances of first.<property> to first->>'<property>'.
+    """
+    if pair_search_request.filter_expr:
+        # (first->>'datetime') > (second->>'datetime')
+        raw_query = "AND " + cql2.Expr(pair_search_request.filter_expr).to_sql().query
+        logger.debug(raw_query)
+        cleaned_query = re.sub(
+            r'"?(first|second)\.(\w+)"*', r"\1.feature->'properties'->>'\2'", raw_query
+        )
+        logger.debug(cleaned_query)
+        return cleaned_query
+    return ""
 
 
 def register_pair_search(api: StacApi):

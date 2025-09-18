@@ -62,7 +62,6 @@ def test_00_no_constraints(client, method: str, response_type: str, control_00: 
     )
 
 
-@pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
 def test_01_pair_order(client, method: str, response_type: str, control_01: list):
