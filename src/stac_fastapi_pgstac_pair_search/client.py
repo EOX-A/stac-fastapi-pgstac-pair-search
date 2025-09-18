@@ -23,12 +23,6 @@ from stac_fastapi_pgstac_pair_search.models import PairSearchRequest, PairSearch
 
 logger = logging.getLogger(__name__)
 
-sql_pair_template = (Path(__file__).parent / "sql" / "pair.sql").read_text()
-sql_first_only_template = (Path(__file__).parent / "sql" / "first-only.sql").read_text()
-sql_second_only_template = (
-    Path(__file__).parent / "sql" / "second-only.sql"
-).read_text()
-
 
 class PairSearchClient(CoreCrudClient):
     """A custom client for pair searching."""
