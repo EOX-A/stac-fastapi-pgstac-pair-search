@@ -64,7 +64,8 @@ def test_00_no_constraints(client, method: str, response_type: str, control_00: 
 
 @pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_01_pair_order(client, method: str, control_01: list):
+@pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
+def test_01_pair_order(client, method: str, response_type: str, control_01: list):
     """
     Test 01: orderes pairs, first before second
 
@@ -76,6 +77,7 @@ def test_01_pair_order(client, method: str, control_01: list):
     assert_pairs_match_control(
         client,
         method,
+        response_type,
         {
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
@@ -89,7 +91,8 @@ def test_01_pair_order(client, method: str, control_01: list):
 
 @pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_02_area_overlap(client, method: str, control_02: list):
+@pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
+def test_02_area_overlap(client, method: str, response_type: str, control_02: list):
     """
     Test 02: pairs with 75% area overlap
 
@@ -100,6 +103,7 @@ def test_02_area_overlap(client, method: str, control_02: list):
     assert_pairs_match_control(
         client,
         method,
+        response_type,
         {
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
@@ -113,7 +117,8 @@ def test_02_area_overlap(client, method: str, control_02: list):
 
 @pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_03_wrs_grid(client, method: str, control_03: list):
+@pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
+def test_03_wrs_grid(client, method: str, response_type: str, control_03: list):
     """
     Test 03: pairs sharing the same WRS grid
 
@@ -124,6 +129,7 @@ def test_03_wrs_grid(client, method: str, control_03: list):
     assert_pairs_match_control(
         client,
         method,
+        response_type,
         {
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
@@ -137,7 +143,8 @@ def test_03_wrs_grid(client, method: str, control_03: list):
 
 @pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_04_timedelta(client, method: str, control_04: list):
+@pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
+def test_04_timedelta(client, method: str, response_type: str, control_04: list):
     """
     Test 04: second product more than 35 days after first
 
@@ -149,6 +156,7 @@ def test_04_timedelta(client, method: str, control_04: list):
     assert_pairs_match_control(
         client,
         method,
+        response_type,
         {
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
@@ -162,7 +170,8 @@ def test_04_timedelta(client, method: str, control_04: list):
 
 @pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_05_same_track(client, method: str, control_05: list):
+@pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
+def test_05_same_track(client, method: str, response_type: str, control_05: list):
     """
     Test 05: second after first, the same track/frame (grid code)
 
@@ -173,6 +182,7 @@ def test_05_same_track(client, method: str, control_05: list):
     assert_pairs_match_control(
         client,
         method,
+        response_type,
         {
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
@@ -186,7 +196,10 @@ def test_05_same_track(client, method: str, control_05: list):
 
 @pytest.mark.skip(reason="Skipped as filter query is not yet implemented")
 @pytest.mark.parametrize("method", ["get", "post"])
-def test_06_timedelta_overlap(client, method: str, control_06: list):
+@pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
+def test_06_timedelta_overlap(
+    client, method: str, response_type: str, control_06: list
+):
     """
     Test 06: second product more than 35 days after first and 75% area overlap
 
@@ -198,6 +211,7 @@ def test_06_timedelta_overlap(client, method: str, control_06: list):
     assert_pairs_match_control(
         client,
         method,
+        response_type,
         {
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
