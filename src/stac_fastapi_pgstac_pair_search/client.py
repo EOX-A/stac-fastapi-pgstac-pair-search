@@ -115,6 +115,20 @@ class PairSearchClient(CoreCrudClient):
         # search_request.conf = search_request.conf or {}
         # search_request.conf["nohydrate"] = settings.use_api_hydrate
 
+        # TODO: move to setup stage
+        for file in [
+            "n_diff.sql",
+            "s_raoverlap.sql",
+            "t_diff.sql",
+            "t_end_timerange.sql",
+            "t_end_timestamp.sql",
+            "t_start_timerange.sql",
+            "t_end_timerange.sql",
+        ]:
+            async with request.app.state.get_connection(request, "r") as conn:
+                load_functions_sql = (Path(__file__).parent / "sql" / file).read_text()
+                await conn.fetchval(load_functions_sql)
+
         try:
             async with request.app.state.get_connection(request, "r") as conn:
                 query, params = render_sql(search_request)
@@ -223,13 +237,36 @@ def cql2_to_sql(filter_expr: Union[str, None]) -> str:
     """
     if filter_expr is None:
         return ""
-
     # (first->>'datetime') > (second->>'datetime')
-    raw_query = "AND " + cql2.Expr(filter_expr).to_sql().query
-    logger.debug(raw_query)
+
+    # properties can be different:
+    # id --> at feature root
+    # geometry --> at feature root
+    # collection --> at feature root
+    # datetime --> in feature properties
+    # custom properties --> in feature properties
+    expr = cql2.Expr(filter_expr)
+    query = expr.to_sql().query
+    for i, param in enumerate(expr.to_sql().params, start=1):
+        # Use repr() for safe SQL literal formatting (works for numbers, strings, None)
+        query = query.replace(f"${i}", repr(param))
+    query = "AND " + query
+    logger.debug(query)
+
+    # replace all other properties
     cleaned_query = re.sub(
-        r'"?(first|second)\.(\w+)"*', r"\1.feature->'properties'->>'\2'", raw_query
+        r'"?(first|second)\.(\w+)"*', r"\1.feature->'properties'->>'\2'", query
     )
+
+    # replace root properties directly:
+    root_properties = ["geometry", "id", "collection"]
+    for prop in root_properties:
+        for prefix in ["first", "second"]:
+            cleaned_query = cleaned_query.replace(
+                f"{prefix}.feature->'properties'->>'{prop}'",
+                f"{prefix}.feature->>'{prop}'",
+            )
+
     logger.debug(cleaned_query)
     return cleaned_query
 
