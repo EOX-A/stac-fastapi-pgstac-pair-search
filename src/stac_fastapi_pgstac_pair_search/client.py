@@ -1,9 +1,12 @@
 from __future__ import annotations
 import logging
-from typing import Dict, Any, Optional, Set, List
+from pathlib import Path
+import re
+from typing import Dict, Any, Optional, Set, List, Tuple, Union
 
 from asyncpg.exceptions import InvalidDatetimeFormatError
 from buildpg import render
+import cql2
 from fastapi import Request
 from pypgstac.hydration import hydrate
 from stac_fastapi.api.routes import create_async_endpoint
@@ -21,6 +24,9 @@ from stac_fastapi_pgstac_pair_search.models import PairSearchRequest, PairSearch
 
 
 logger = logging.getLogger(__name__)
+
+
+pair_search_sql = (Path(__file__).parent / "sql" / "pair_search.sql").read_text()
 
 
 class PairSearchClient(CoreCrudClient):
@@ -69,7 +75,9 @@ class PairSearchClient(CoreCrudClient):
             ItemCollection containing items which match the search criteria.
         """
         body = await request.body()
-        search_request = PairSearchRequest.model_validate_json(body, by_alias=True)
+        search_request = PairSearchRequest.model_validate_json(
+            body.decode(), by_alias=True
+        )
         item_collection = await self._pair_search_base(search_request, request=request)
 
         # If we have the `fields` extension enabled
@@ -107,24 +115,28 @@ class PairSearchClient(CoreCrudClient):
         # search_request.conf = search_request.conf or {}
         # search_request.conf["nohydrate"] = settings.use_api_hydrate
 
-        search_request_json = search_request.model_dump_json(
-            exclude_none=True, by_alias=True
-        )
+        # TODO: move to setup stage
+        for file in [
+            "n_diff.sql",
+            "s_raoverlap.sql",
+            "t_diff.sql",
+            "t_end_timerange.sql",
+            "t_end_timestamp.sql",
+            "t_start_timerange.sql",
+            "t_end_timerange.sql",
+        ]:
+            async with request.app.state.get_connection(request, "r") as conn:
+                load_functions_sql = (Path(__file__).parent / "sql" / file).read_text()
+                await conn.fetchval(load_functions_sql)
+
         try:
             async with request.app.state.get_connection(request, "r") as conn:
-                # TODO: implement our own search function
-                q, p = render(
-                    """
-                    SELECT * FROM search(:req::text::jsonb);
-                    """,
-                    req=search_request_json,
-                )
-                items = await conn.fetchval(q, *p)
+                query, params = render_sql(search_request)
+                items = await conn.fetchval(query, *params)
         except InvalidDatetimeFormatError as e:
             raise InvalidQueryParameter(
                 f"Datetime parameter {search_request.datetime} is invalid."
             ) from e
-
         # Starting in pgstac 0.9.0, the `next` and `prev` tokens are returned in spec-compliant links with method GET
         next_from_link: Optional[str] = None
         prev_from_link: Optional[str] = None
@@ -200,6 +212,63 @@ class PairSearchClient(CoreCrudClient):
             prev=prev,
         ).get_links()
         return collection
+
+
+def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
+    return render(
+        pair_search_sql.replace(
+            "{filter_expr}", cql2_to_sql(pair_search_request.filter_expr)
+        ),
+        first_req=pair_search_request.first_search_params().model_dump_json(
+            exclude_none=True, by_alias=True
+        ),
+        second_req=pair_search_request.second_search_params().model_dump_json(
+            exclude_none=True, by_alias=True
+        ),
+        # filter=pair_search_request.filter_expr,
+        limit=pair_search_request.limit or 10,
+        response_type=pair_search_request.response_type,
+    )
+
+
+def cql2_to_sql(filter_expr: Union[str, None]) -> str:
+    """
+    Convert instances of first.<property> to first->>'<property>'.
+    """
+    if filter_expr is None:
+        return ""
+    # (first->>'datetime') > (second->>'datetime')
+
+    # properties can be different:
+    # id --> at feature root
+    # geometry --> at feature root
+    # collection --> at feature root
+    # datetime --> in feature properties
+    # custom properties --> in feature properties
+    expr = cql2.Expr(filter_expr)
+    query = expr.to_sql().query
+    for i, param in enumerate(expr.to_sql().params, start=1):
+        # Use repr() for safe SQL literal formatting (works for numbers, strings, None)
+        query = query.replace(f"${i}", repr(param))
+    query = "AND " + query
+    logger.debug(query)
+
+    # replace all other properties
+    cleaned_query = re.sub(
+        r'"?(first|second)\.(\w+)"*', r"\1.feature->'properties'->>'\2'", query
+    )
+
+    # replace root properties directly:
+    root_properties = ["geometry", "id", "collection"]
+    for prop in root_properties:
+        for prefix in ["first", "second"]:
+            cleaned_query = cleaned_query.replace(
+                f"{prefix}.feature->'properties'->>'{prop}'",
+                f"{prefix}.feature->>'{prop}'",
+            )
+
+    logger.debug(cleaned_query)
+    return cleaned_query
 
 
 def register_pair_search(api: StacApi):

@@ -4,7 +4,7 @@ from fastapi import Query
 from pydantic import Field, AfterValidator, BaseModel, model_validator
 from datetime import datetime as dt
 from stac_fastapi.extensions.core.filter.request import FilterLang
-from stac_fastapi.types.search import Limit, APIRequest
+from stac_fastapi.types.search import Limit, APIRequest, BaseSearchPostRequest
 from stac_fastapi.pgstac.models.links import BaseLinks
 from stac_pydantic.api.search import Intersection
 from stac_pydantic.links import Relations
@@ -86,7 +86,7 @@ Remember to URL encode the CQL2-JSON if using GET""",
                 },
             },
         ),
-    ] = None
+    ] = Field(alias="filter", default=None)
     filter_crs: Annotated[
         Optional[str],
         Query(
@@ -145,6 +145,24 @@ Remember to URL encode the CQL2-JSON if using GET""",
     #         return self.intersects
     #     else:
     #         return None
+
+    def first_search_params(self) -> BaseSearchPostRequest:
+        return BaseSearchPostRequest(
+            bbox=self.first_bbox,
+            datetime=self.first_datetime,
+            intersects=self.first_intersects,
+            ids=self.first_ids,
+            collections=self.first_collections,
+        )
+
+    def second_search_params(self) -> BaseSearchPostRequest:
+        return BaseSearchPostRequest(
+            bbox=self.second_bbox,
+            datetime=self.second_datetime,
+            intersects=self.second_intersects,
+            ids=self.second_ids,
+            collections=self.second_collections,
+        )
 
 
 class PairSearchLinks(BaseLinks):
