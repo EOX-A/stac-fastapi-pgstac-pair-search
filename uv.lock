@@ -1440,7 +1440,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cql2", specifier = ">=0.3.7" },
+    { name = "cql2", specifier = ">=0.4.0" },
     { name = "stac-fastapi-pgstac", specifier = ">=6.0.0" },
     { name = "uvicorn", specifier = ">=0.35.0" },
 ]

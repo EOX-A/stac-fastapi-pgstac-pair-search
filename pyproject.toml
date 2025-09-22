@@ -10,7 +10,7 @@ authors = [
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = [
-    "cql2>=4.0.0",
+    "cql2>=0.4.0",
     "stac-fastapi-pgstac>=6.0.0",
     "uvicorn>=0.35.0",
 ]
