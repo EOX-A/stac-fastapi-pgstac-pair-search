@@ -250,10 +250,6 @@ def cql2_to_sql(filter_expr: Union[str, None]) -> Tuple[str, Dict[str, Any]]:
 
     # 2. Convert cql2's positional ($i) parameters to named (:key) parameters
     for i, param_value in enumerate(cql_params_list, start=1):
-        param_counter += 1
-        # param_name = f"cql_{param_counter}"
-        # final_params[param_name] = param_value
-        # # Replace the positional placeholder with our named one
         query_template = query_template.replace(f"${i}", repr(param_value))
 
     query_template = "AND " + query_template
@@ -288,9 +284,6 @@ def cql2_to_sql(filter_expr: Union[str, None]) -> Tuple[str, Dict[str, Any]]:
                 return f"{prefix}.feature->'properties'->>'{prop_name}'"
 
     # This pattern finds 'first.' or 'second.' followed by a property name.
-    # [\w:]+ matches letters, numbers, underscore, and colons.
-    # r'"?(first|second)\.(\w+)"*', r"\1.feature->'properties'->>'\2'"
-    # pattern = r'"?(first|second)\.(\w+)*"'
     pattern = r'"?\b(first|second)\.([\w:]+)"?'
     final_template = re.sub(pattern, property_replacer, query_template)
     logger.debug(f"Final template: {final_template}, params: {final_params}")

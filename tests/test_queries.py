@@ -158,7 +158,7 @@ def test_04_timedelta(client, method: str, response_type: str, control_04: list)
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 100,
-            "filter": "T_DIFF(first.datetime, second.datetime) > 3024000000",
+            "filter": "second.datetime > first.datetime and T_DIFF(first.datetime, second.datetime) > '35 days'",
         },
         control_04,
     )
@@ -211,7 +211,7 @@ def test_06_timedelta_overlap(
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 100,
-            "filter": "T_DIFF(first.datetime, second.datetime) > 3024000000 and S_RAOVERLAP(first.geometry, second.geometry, 'min') > 0.75",
+            "filter": "second.datetime > first.datetime and T_DIFF(first.datetime, second.datetime) > '35 days' and S_RAOVERLAP(first.geometry, second.geometry, 'min') > 0.75",
         },
         control_06,
     )
