@@ -244,13 +244,13 @@ def cql2_to_sql(filter_expr: Union[str, None]) -> Tuple[str, Dict[str, Any]]:
 
     # 1. Get the base template and parameters from the cql2 library
     expr = cql2.Expr(filter_expr)
-    sql_obj = expr.to_sql()
-    query_template = sql_obj.query
-    cql_params_list = sql_obj.params
-
-    # 2. Convert cql2's positional ($i) parameters to named (:key) parameters
-    for i, param_value in enumerate(cql_params_list, start=1):
-        query_template = query_template.replace(f"${i}", repr(param_value))
+    query_template = expr.to_sql()
+    # sql_obj = expr.to_sql()
+    # query_template = sql_obj.query
+    # cql_params_list = sql_obj.params
+    # # 2. Convert cql2's positional ($i) parameters to named (:key) parameters
+    # for i, param_value in enumerate(cql_params_list, start=1):
+    #     query_template = query_template.replace(f"${i}", repr(param_value))
 
     query_template = "AND " + query_template
     logger.debug(f"Initial template: {query_template}, params: {final_params}")
