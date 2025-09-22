@@ -251,10 +251,10 @@ def cql2_to_sql(filter_expr: Union[str, None]) -> Tuple[str, Dict[str, Any]]:
     # 2. Convert cql2's positional ($i) parameters to named (:key) parameters
     for i, param_value in enumerate(cql_params_list, start=1):
         param_counter += 1
-        param_name = f"cql_{param_counter}"
-        final_params[param_name] = param_value
-        # Replace the positional placeholder with our named one
-        query_template = query_template.replace(f"${i}", f":{param_name}")
+        # param_name = f"cql_{param_counter}"
+        # final_params[param_name] = param_value
+        # # Replace the positional placeholder with our named one
+        query_template = query_template.replace(f"${i}", repr(param_value))
 
     query_template = "AND " + query_template
     logger.debug(f"Initial template: {query_template}, params: {final_params}")
@@ -269,15 +269,23 @@ def cql2_to_sql(filter_expr: Union[str, None]) -> Tuple[str, Dict[str, Any]]:
 
         prefix = match.group(1)  # 'first' or 'second'
         prop_name = match.group(2)  # The property name, e.g., 'datetime' or 'grid:code'
-
-        # The parameter value is the property name string itself
-        final_params[param_name] = prop_name
-        if prop_name in root_properties:
-            # Handle root properties like 'id'
-            return f"{prefix}.feature->>:{param_name}"
+        # namespaced fields with colons need special handling:
+        if ":" in prop_name:
+            # The parameter value is the property name string itself
+            final_params[param_name] = prop_name
+            if prop_name in root_properties:
+                # Handle root properties like 'id'
+                return f"{prefix}.feature->>:{param_name}"
+            else:
+                # Handle nested properties like 'datetime'
+                return f"{prefix}.feature->'properties'->>:{param_name}"
         else:
-            # Handle nested properties like 'datetime'
-            return f"{prefix}.feature->'properties'->>:{param_name}"
+            if prop_name in root_properties:
+                # Handle root properties like 'id'
+                return f"{prefix}.feature->>'{prop_name}'"
+            else:
+                # Handle nested properties like 'datetime'
+                return f"{prefix}.feature->'properties'->>'{prop_name}'"
 
     # This pattern finds 'first.' or 'second.' followed by a property name.
     # [\w:]+ matches letters, numbers, underscore, and colons.
