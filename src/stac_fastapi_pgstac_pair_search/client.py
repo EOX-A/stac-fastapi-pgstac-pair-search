@@ -120,14 +120,12 @@ class PairSearchClient(CoreCrudClient):
             "n_diff.sql",
             "s_raoverlap.sql",
             "t_diff.sql",
-            "t_end_timerange.sql",
-            "t_end_timestamp.sql",
-            "t_start_timerange.sql",
-            "t_end_timerange.sql",
+            "t_end.sql",
+            "t_start.sql",
         ]:
             async with request.app.state.get_connection(request, "r") as conn:
                 load_functions_sql = (Path(__file__).parent / "sql" / file).read_text()
-                await conn.fetchval(load_functions_sql)
+                await conn.execute(load_functions_sql)
 
         try:
             async with request.app.state.get_connection(request, "r") as conn:
@@ -215,10 +213,11 @@ class PairSearchClient(CoreCrudClient):
 
 
 def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
+    filter_query, filter_params = cql2_to_sql(pair_search_request.filter_expr)
+    query = pair_search_sql.replace("{filter_expr}", filter_query)
+    logger.debug(query)
     return render(
-        pair_search_sql.replace(
-            "{filter_expr}", cql2_to_sql(pair_search_request.filter_expr)
-        ),
+        query,
         first_req=pair_search_request.first_search_params().model_dump_json(
             exclude_none=True, by_alias=True
         ),
@@ -228,47 +227,66 @@ def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
         # filter=pair_search_request.filter_expr,
         limit=pair_search_request.limit or 10,
         response_type=pair_search_request.response_type,
+        **filter_params,
     )
 
 
-def cql2_to_sql(filter_expr: Union[str, None]) -> str:
+def cql2_to_sql(filter_expr: Union[str, None]) -> Tuple[str, Dict[str, Any]]:
     """
-    Convert instances of first.<property> to first->>'<property>'.
+    Converts a CQL2 filter expression into a buildpg-compatible SQL template
+    and a dictionary of parameters.
     """
-    if filter_expr is None:
-        return ""
-    # (first->>'datetime') > (second->>'datetime')
+    if not filter_expr:
+        return "", {}
 
-    # properties can be different:
-    # id --> at feature root
-    # geometry --> at feature root
-    # collection --> at feature root
-    # datetime --> in feature properties
-    # custom properties --> in feature properties
+    final_params: Dict[str, Any] = {}
+    param_counter = 0
+
+    # 1. Get the base template and parameters from the cql2 library
     expr = cql2.Expr(filter_expr)
-    query = expr.to_sql().query
-    for i, param in enumerate(expr.to_sql().params, start=1):
-        # Use repr() for safe SQL literal formatting (works for numbers, strings, None)
-        query = query.replace(f"${i}", repr(param))
-    query = "AND " + query
-    logger.debug(query)
+    sql_obj = expr.to_sql()
+    query_template = sql_obj.query
+    cql_params_list = sql_obj.params
 
-    # replace all other properties
-    cleaned_query = re.sub(
-        r'"?(first|second)\.(\w+)"*', r"\1.feature->'properties'->>'\2'", query
-    )
+    # 2. Convert cql2's positional ($i) parameters to named (:key) parameters
+    for i, param_value in enumerate(cql_params_list, start=1):
+        param_counter += 1
+        param_name = f"cql_{param_counter}"
+        final_params[param_name] = param_value
+        # Replace the positional placeholder with our named one
+        query_template = query_template.replace(f"${i}", f":{param_name}")
 
-    # replace root properties directly:
-    root_properties = ["geometry", "id", "collection"]
-    for prop in root_properties:
-        for prefix in ["first", "second"]:
-            cleaned_query = cleaned_query.replace(
-                f"{prefix}.feature->'properties'->>'{prop}'",
-                f"{prefix}.feature->>'{prop}'",
-            )
+    query_template = "AND " + query_template
+    logger.debug(f"Initial template: {query_template}, params: {final_params}")
 
-    logger.debug(cleaned_query)
-    return cleaned_query
+    # 3. Parameterize all 'first.<prop>' and 'second.<prop>' lookups
+    root_properties = {"geometry", "id", "collection"}
+
+    def property_replacer(match: re.Match) -> str:
+        nonlocal param_counter
+        param_counter += 1
+        param_name = f"prop_{param_counter}"
+
+        prefix = match.group(1)  # 'first' or 'second'
+        prop_name = match.group(2)  # The property name, e.g., 'datetime' or 'grid:code'
+
+        # The parameter value is the property name string itself
+        final_params[param_name] = prop_name
+        if prop_name in root_properties:
+            # Handle root properties like 'id'
+            return f"{prefix}.feature->>:{param_name}"
+        else:
+            # Handle nested properties like 'datetime'
+            return f"{prefix}.feature->'properties'->>:{param_name}"
+
+    # This pattern finds 'first.' or 'second.' followed by a property name.
+    # [\w:]+ matches letters, numbers, underscore, and colons.
+    # r'"?(first|second)\.(\w+)"*', r"\1.feature->'properties'->>'\2'"
+    # pattern = r'"?(first|second)\.(\w+)*"'
+    pattern = r'"?\b(first|second)\.([\w:]+)"?'
+    final_template = re.sub(pattern, property_replacer, query_template)
+    logger.debug(f"Final template: {final_template}, params: {final_params}")
+    return final_template, final_params
 
 
 def register_pair_search(api: StacApi):
