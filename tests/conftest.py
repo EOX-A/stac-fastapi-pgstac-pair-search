@@ -54,3 +54,8 @@ def control_05():
 @pytest.fixture(scope="session")
 def control_06():
     return load_control_json("control_06.json")
+
+
+@pytest.fixture(scope="session")
+def control_07():
+    return load_control_json("control_07.json")

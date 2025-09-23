@@ -215,3 +215,22 @@ def test_06_timedelta_overlap(
         },
         control_06,
     )
+
+
+@pytest.mark.parametrize("method", ["get", "post"])
+@pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
+def test_07_wkt_overlap(client, method: str, response_type: str, control_07: list):
+    # ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000
+    assert_pairs_match_control(
+        client,
+        method,
+        response_type,
+        {
+            "first-collections": ["ENVISAT.ASA.IMS_1P"],
+            "second-collections": ["ENVISAT.ASA.IMS_1P"],
+            "response-type": "pair",
+            "limit": 100,
+            "filter": "S_RAOVERLAP(first.geometry, 'POLYGON ((6 43, 7.5 43, 7.5 44, 6 44, 6 43))', 'min') > 0.75",
+        },
+        control_07,
+    )

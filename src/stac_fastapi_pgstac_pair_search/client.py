@@ -245,14 +245,18 @@ def cql2_to_sql(filter_expr: Union[str, None]) -> Tuple[str, Dict[str, Any]]:
         if ":" in prop_name:
             # The parameter value is the property name string itself
             final_params[param_name] = prop_name
-            if prop_name in root_properties:
+            if prop_name == "geometry":
+                return f"{prefix}.feature->'{param_name}'"
+            elif prop_name in root_properties:
                 # Handle root properties like 'id'
                 return f"{prefix}.feature->>:{param_name}"
             else:
                 # Handle nested properties like 'datetime'
                 return f"{prefix}.feature->'properties'->>:{param_name}"
         else:
-            if prop_name in root_properties:
+            if prop_name == "geometry":
+                return f"{prefix}.feature->'{prop_name}'"
+            elif prop_name in root_properties:
                 # Handle root properties like 'id'
                 return f"{prefix}.feature->>'{prop_name}'"
             else:
@@ -323,6 +327,7 @@ def register_pair_search(api: StacApi):
     logger.debug("Registered /pair-search endpoint")
 
     # logger.debug("Loading pair search SQL functions into database")
+    # from pypgstac.db import PgstacDB
     # with PgstacDB(commit_on_exit=True).connect(
     # ) as conn:
     #     with conn.cursor() as cur:
