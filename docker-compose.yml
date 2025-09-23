@@ -1,6 +1,6 @@
 services:
   app:
-    image: vs-pair-search
+    image: stac-fastapi-pgstac-pair-search
     build: .
     environment:
       - APP_HOST=0.0.0.0
@@ -37,13 +37,19 @@ services:
       - PGUSER=username
       - PGPASSWORD=password
       - PGDATABASE=postgis
+    volumes:
+      - ./src/stac_fastapi_pgstac_pair_search/sql/n_diff.sql:/docker-entrypoint-initdb.d/n_diff.sql
+      - ./src/stac_fastapi_pgstac_pair_search/sql/s_raoverlap.sql:/docker-entrypoint-initdb.d/s_raoverlap.sql
+      - ./src/stac_fastapi_pgstac_pair_search/sql/t_diff.sql:/docker-entrypoint-initdb.d/t_diff.sql
+      - ./src/stac_fastapi_pgstac_pair_search/sql/t_end.sql:/docker-entrypoint-initdb.d/t_end.sql
+      - ./src/stac_fastapi_pgstac_pair_search/sql/t_start.sql:/docker-entrypoint-initdb.d/t_start.sql
     ports:
       - "5439:5432"
     command: postgres -N 500
 
   # Load test dataset into the PGStac Application
   load_test_data:
-    image: vs-pair-search
+    image: stac-fastapi-pgstac-pair-search
     environment:
       - ENVIRONMENT=development
       - PGUSER=username

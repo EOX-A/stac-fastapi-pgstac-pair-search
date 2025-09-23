@@ -115,18 +115,6 @@ class PairSearchClient(CoreCrudClient):
         # search_request.conf = search_request.conf or {}
         # search_request.conf["nohydrate"] = settings.use_api_hydrate
 
-        # TODO: move to setup stage
-        for file in [
-            "n_diff.sql",
-            "s_raoverlap.sql",
-            "t_diff.sql",
-            "t_end.sql",
-            "t_start.sql",
-        ]:
-            async with request.app.state.get_connection(request, "r") as conn:
-                load_functions_sql = (Path(__file__).parent / "sql" / file).read_text()
-                await conn.execute(load_functions_sql)
-
         try:
             async with request.app.state.get_connection(request, "r") as conn:
                 query, params = render_sql(search_request)
@@ -242,23 +230,11 @@ def cql2_to_sql(filter_expr: Union[str, None]) -> Tuple[str, Dict[str, Any]]:
     final_params: Dict[str, Any] = {}
     param_counter = 0
 
-    # 1. Get the base template and parameters from the cql2 library
     expr = cql2.Expr(filter_expr)
-    query_template = expr.to_sql()
-    # sql_obj = expr.to_sql()
-    # query_template = sql_obj.query
-    # cql_params_list = sql_obj.params
-    # # 2. Convert cql2's positional ($i) parameters to named (:key) parameters
-    # for i, param_value in enumerate(cql_params_list, start=1):
-    #     query_template = query_template.replace(f"${i}", repr(param_value))
-
-    query_template = "AND " + query_template
-    logger.debug(f"Initial template: {query_template}, params: {final_params}")
-
-    # 3. Parameterize all 'first.<prop>' and 'second.<prop>' lookups
-    root_properties = {"geometry", "id", "collection"}
+    query_template = "AND " + expr.to_sql()
 
     def property_replacer(match: re.Match) -> str:
+        root_properties = {"geometry", "id", "collection"}
         nonlocal param_counter
         param_counter += 1
         param_name = f"prop_{param_counter}"
@@ -343,3 +319,20 @@ def register_pair_search(api: StacApi):
             pair_search_client.get_pair_search, PairSearchRequest
         ),
     )
+
+    logger.debug("Registered /pair-search endpoint")
+
+    # logger.debug("Loading pair search SQL functions into database")
+    # with PgstacDB(commit_on_exit=True).connect(
+    # ) as conn:
+    #     with conn.cursor() as cur:
+    #         for file in [
+    #             "n_diff.sql",
+    #             "s_raoverlap.sql",
+    #             "t_diff.sql",
+    #             "t_end.sql",
+    #             "t_start.sql",
+    #         ]:
+    #             load_functions_sql = (Path(__file__).parent / "sql" / file).read_text()
+    #             cur.execute(load_functions_sql)
+    #     conn.commit()
