@@ -1,12 +1,10 @@
 from __future__ import annotations
 import logging
 from pathlib import Path
-import re
-from typing import Dict, Any, Optional, Set, List, Tuple, Union
+from typing import Dict, Any, Optional, Set, List, Tuple
 
 from asyncpg.exceptions import InvalidDatetimeFormatError
 from buildpg import render
-import cql2
 from fastapi import Request
 from pypgstac.hydration import hydrate
 from stac_fastapi.api.routes import create_async_endpoint
@@ -201,7 +199,7 @@ class PairSearchClient(CoreCrudClient):
 
 
 def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
-    filter_query, filter_params = cql2_to_sql(pair_search_request.filter_expr)
+    filter_query, filter_params = pair_search_request.filter_sql
     query = pair_search_sql.replace("{filter_expr}", filter_query)
     logger.debug(query)
     return render(
@@ -217,57 +215,6 @@ def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
         response_type=pair_search_request.response_type,
         **filter_params,
     )
-
-
-def cql2_to_sql(filter_expr: Union[str, None]) -> Tuple[str, Dict[str, Any]]:
-    """
-    Converts a CQL2 filter expression into a buildpg-compatible SQL template
-    and a dictionary of parameters.
-    """
-    if not filter_expr:
-        return "", {}
-
-    final_params: Dict[str, Any] = {}
-    param_counter = 0
-
-    expr = cql2.Expr(filter_expr)
-    query_template = "AND " + expr.to_sql()
-
-    def property_replacer(match: re.Match) -> str:
-        root_properties = {"geometry", "id", "collection"}
-        nonlocal param_counter
-        param_counter += 1
-        param_name = f"prop_{param_counter}"
-
-        prefix = match.group(1)  # 'first' or 'second'
-        prop_name = match.group(2)  # The property name, e.g., 'datetime' or 'grid:code'
-        # namespaced fields with colons need special handling:
-        if ":" in prop_name:
-            # The parameter value is the property name string itself
-            final_params[param_name] = prop_name
-            if prop_name == "geometry":
-                return f"{prefix}.feature->'{param_name}'"
-            elif prop_name in root_properties:
-                # Handle root properties like 'id'
-                return f"{prefix}.feature->>:{param_name}"
-            else:
-                # Handle nested properties like 'datetime'
-                return f"{prefix}.feature->'properties'->>:{param_name}"
-        else:
-            if prop_name == "geometry":
-                return f"{prefix}.feature->'{prop_name}'"
-            elif prop_name in root_properties:
-                # Handle root properties like 'id'
-                return f"{prefix}.feature->>'{prop_name}'"
-            else:
-                # Handle nested properties like 'datetime'
-                return f"{prefix}.feature->'properties'->>'{prop_name}'"
-
-    # This pattern finds 'first.' or 'second.' followed by a property name.
-    pattern = r'"?\b(first|second)\.([\w:]+)"?'
-    final_template = re.sub(pattern, property_replacer, query_template)
-    logger.debug(f"Final template: {final_template}, params: {final_params}")
-    return final_template, final_params
 
 
 def register_pair_search(api: StacApi):

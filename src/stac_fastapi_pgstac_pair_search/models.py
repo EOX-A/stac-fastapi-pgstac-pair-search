@@ -1,5 +1,8 @@
-from typing import Dict, Optional, List, Annotated, Any, Literal
+import logging
+import re
+from typing import Dict, Optional, List, Annotated, Any, Literal, Tuple
 
+import cql2
 from fastapi import Query
 from pydantic import Field, AfterValidator, BaseModel, model_validator
 from datetime import datetime as dt
@@ -15,6 +18,8 @@ from stac_pydantic.shared import (
     validate_datetime,
     str_to_datetimes,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PairSearchRequest(BaseModel, APIRequest):
@@ -103,6 +108,59 @@ Remember to URL encode the CQL2-JSON if using GET""",
     ] = "cql2-text"
 
     @property
+    def filter_sql(self) -> Tuple[str, Dict[str, Any]]:
+        """
+        Converts a CQL2 filter expression into a buildpg-compatible SQL template
+        and a dictionary of parameters.
+        """
+        if not self.filter_expr:
+            return "", {}
+
+        final_params: Dict[str, Any] = {}
+        param_counter = 0
+
+        expr = cql2.Expr(self.filter_expr)
+        query_template = "AND " + expr.to_sql()
+
+        def property_replacer(match: re.Match) -> str:
+            root_properties = {"geometry", "id", "collection"}
+            nonlocal param_counter
+            param_counter += 1
+            param_name = f"prop_{param_counter}"
+
+            prefix = match.group(1)  # 'first' or 'second'
+            prop_name = match.group(
+                2
+            )  # The property name, e.g., 'datetime' or 'grid:code'
+            # namespaced fields with colons need special handling:
+            if ":" in prop_name:
+                # The parameter value is the property name string itself
+                final_params[param_name] = prop_name
+                if prop_name == "geometry":
+                    return f"{prefix}.feature->'{param_name}'"
+                elif prop_name in root_properties:
+                    # Handle root properties like 'id'
+                    return f"{prefix}.feature->>:{param_name}"
+                else:
+                    # Handle nested properties like 'datetime'
+                    return f"{prefix}.feature->'properties'->>:{param_name}"
+            else:
+                if prop_name == "geometry":
+                    return f"{prefix}.feature->'{prop_name}'"
+                elif prop_name in root_properties:
+                    # Handle root properties like 'id'
+                    return f"{prefix}.feature->>'{prop_name}'"
+                else:
+                    # Handle nested properties like 'datetime'
+                    return f"{prefix}.feature->'properties'->>'{prop_name}'"
+
+        # This pattern finds 'first.' or 'second.' followed by a property name.
+        pattern = r'"?\b(first|second)\.([\w:]+)"?'
+        final_template = re.sub(pattern, property_replacer, query_template)
+        logger.debug(f"Final template: {final_template}, params: {final_params}")
+        return final_template, final_params
+
+    @property
     def start_date(self) -> Optional[dt]:
         start_date: Optional[dt] = None
         if self.datetime:
@@ -131,6 +189,12 @@ Remember to URL encode the CQL2-JSON if using GET""",
             collections = values.get(f"{prefix}-collections")
             if isinstance(collections, str):
                 values[f"{prefix}-collections"] = collections.split(",")
+        filter_expr = values.get("filter_expr")
+        if filter_expr:
+            try:
+                cql2.Expr(filter_expr).validate()  # will raise if invalid
+            except Exception as exc:
+                raise ValueError(f"Invalid CQL2 filter expression: {exc}") from exc
         return values
 
     # @property
