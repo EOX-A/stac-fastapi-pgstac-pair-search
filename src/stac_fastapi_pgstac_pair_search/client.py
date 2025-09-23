@@ -1,6 +1,7 @@
 from __future__ import annotations
 import logging
-from typing import Dict, Any, Optional, Set, List
+from pathlib import Path
+from typing import Dict, Any, Optional, Set, List, Tuple
 
 from asyncpg.exceptions import InvalidDatetimeFormatError
 from buildpg import render
@@ -21,6 +22,9 @@ from stac_fastapi_pgstac_pair_search.models import PairSearchRequest, PairSearch
 
 
 logger = logging.getLogger(__name__)
+
+
+pair_search_sql = (Path(__file__).parent / "sql" / "pair_search.sql").read_text()
 
 
 class PairSearchClient(CoreCrudClient):
@@ -69,7 +73,9 @@ class PairSearchClient(CoreCrudClient):
             ItemCollection containing items which match the search criteria.
         """
         body = await request.body()
-        search_request = PairSearchRequest.model_validate_json(body, by_alias=True)
+        search_request = PairSearchRequest.model_validate_json(
+            body.decode(), by_alias=True
+        )
         item_collection = await self._pair_search_base(search_request, request=request)
 
         # If we have the `fields` extension enabled
@@ -107,24 +113,14 @@ class PairSearchClient(CoreCrudClient):
         # search_request.conf = search_request.conf or {}
         # search_request.conf["nohydrate"] = settings.use_api_hydrate
 
-        search_request_json = search_request.model_dump_json(
-            exclude_none=True, by_alias=True
-        )
         try:
             async with request.app.state.get_connection(request, "r") as conn:
-                # TODO: implement our own search function
-                q, p = render(
-                    """
-                    SELECT * FROM search(:req::text::jsonb);
-                    """,
-                    req=search_request_json,
-                )
-                items = await conn.fetchval(q, *p)
+                query, params = render_sql(search_request)
+                items = await conn.fetchval(query, *params)
         except InvalidDatetimeFormatError as e:
             raise InvalidQueryParameter(
                 f"Datetime parameter {search_request.datetime} is invalid."
             ) from e
-
         # Starting in pgstac 0.9.0, the `next` and `prev` tokens are returned in spec-compliant links with method GET
         next_from_link: Optional[str] = None
         prev_from_link: Optional[str] = None
@@ -202,6 +198,25 @@ class PairSearchClient(CoreCrudClient):
         return collection
 
 
+def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
+    filter_query, filter_params = pair_search_request.filter_sql
+    query = pair_search_sql.replace("{filter_expr}", filter_query)
+    logger.debug(query)
+    return render(
+        query,
+        first_req=pair_search_request.first_search_params().model_dump_json(
+            exclude_none=True, by_alias=True
+        ),
+        second_req=pair_search_request.second_search_params().model_dump_json(
+            exclude_none=True, by_alias=True
+        ),
+        # filter=pair_search_request.filter_expr,
+        limit=pair_search_request.limit or 10,
+        response_type=pair_search_request.response_type,
+        **filter_params,
+    )
+
+
 def register_pair_search(api: StacApi):
     # initialize the client
     pair_search_client = PairSearchClient(
@@ -255,3 +270,21 @@ def register_pair_search(api: StacApi):
             pair_search_client.get_pair_search, PairSearchRequest
         ),
     )
+
+    logger.debug("Registered /pair-search endpoint")
+
+    # logger.debug("Loading pair search SQL functions into database")
+    # from pypgstac.db import PgstacDB
+    # with PgstacDB(commit_on_exit=True).connect(
+    # ) as conn:
+    #     with conn.cursor() as cur:
+    #         for file in [
+    #             "n_diff.sql",
+    #             "s_raoverlap.sql",
+    #             "t_diff.sql",
+    #             "t_end.sql",
+    #             "t_start.sql",
+    #         ]:
+    #             load_functions_sql = (Path(__file__).parent / "sql" / file).read_text()
+    #             cur.execute(load_functions_sql)
+    #     conn.commit()

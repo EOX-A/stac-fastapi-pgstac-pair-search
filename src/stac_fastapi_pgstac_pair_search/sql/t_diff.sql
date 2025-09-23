@@ -1,0 +1,17 @@
+CREATE OR REPLACE FUNCTION T_DIFF(a TIMESTAMPTZ, b TIMESTAMPTZ)
+RETURNS INTERVAL AS $$
+BEGIN
+  RETURN CASE
+    WHEN a >= b THEN a - b
+    ELSE b - a
+  END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION T_DIFF(a TEXT, b TEXT)
+RETURNS INTERVAL AS $$
+BEGIN
+  -- Cast the text inputs to timestamps and call the original function
+  RETURN T_DIFF(a::TIMESTAMPTZ, b::TIMESTAMPTZ);
+END;
+$$ LANGUAGE plpgsql;

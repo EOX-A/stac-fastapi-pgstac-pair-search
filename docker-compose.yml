@@ -1,6 +1,6 @@
 services:
   app:
-    image: vs-pair-search
+    image: stac-fastapi-pgstac-pair-search
     build: .
     environment:
       - APP_HOST=0.0.0.0
@@ -37,15 +37,26 @@ services:
       - PGUSER=username
       - PGPASSWORD=password
       - PGDATABASE=postgis
+    volumes:
+      - ./src/stac_fastapi_pgstac_pair_search/sql/n_diff.sql:/docker-entrypoint-initdb.d/n_diff.sql
+      - ./src/stac_fastapi_pgstac_pair_search/sql/s_raoverlap.sql:/docker-entrypoint-initdb.d/s_raoverlap.sql
+      - ./src/stac_fastapi_pgstac_pair_search/sql/t_diff.sql:/docker-entrypoint-initdb.d/t_diff.sql
+      - ./src/stac_fastapi_pgstac_pair_search/sql/t_end.sql:/docker-entrypoint-initdb.d/t_end.sql
+      - ./src/stac_fastapi_pgstac_pair_search/sql/t_start.sql:/docker-entrypoint-initdb.d/t_start.sql
     ports:
       - "5439:5432"
     command: postgres -N 500
 
   # Load test dataset into the PGStac Application
   load_test_data:
-    image: vs-pair-search
+    image: stac-fastapi-pgstac-pair-search
     environment:
       - ENVIRONMENT=development
+      - PGUSER=username
+      - PGPASSWORD=password
+      - PGDATABASE=postgis
+      - PGHOST=database
+      - PGPORT=5432
     volumes:
       - ./stac_fastapi:/app/stac_fastapi
       - ./scripts:/app/scripts
@@ -53,7 +64,7 @@ services:
       /bin/sh -c "
         ./scripts/wait-for-it.sh -t 60 app:8082 &&
         python -m pip install pip -U &&
-        python -m pip install requests tqdm pystac_client &&
+        python -m pip install requests tqdm pystac_client pypgstac[psycopg] &&
         python /app/scripts/ingest_test_data.py http://app:8082
       "
     depends_on:
