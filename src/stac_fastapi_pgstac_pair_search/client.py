@@ -24,7 +24,7 @@ from stac_fastapi_pgstac_pair_search.models import PairSearchRequest, PairSearch
 logger = logging.getLogger(__name__)
 
 
-pair_search_sql = (Path(__file__).parent / "sql" / "pair_search.sql").read_text()
+PAIR_SEARCH_SQL = (Path(__file__).parent / "sql" / "pair_search.sql").read_text()
 
 
 class PairSearchClient(CoreCrudClient):
@@ -200,7 +200,7 @@ class PairSearchClient(CoreCrudClient):
 
 def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
     filter_query, filter_params = pair_search_request.filter_sql
-    query = pair_search_sql.replace("{filter_expr}", filter_query)
+    query = PAIR_SEARCH_SQL.replace("{filter_expr}", filter_query)
     logger.debug(query)
     return render(
         query,
@@ -210,7 +210,6 @@ def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
         second_req=pair_search_request.second_search_params().model_dump_json(
             exclude_none=True, by_alias=True
         ),
-        # filter=pair_search_request.filter_expr,
         limit=pair_search_request.limit or 10,
         response_type=pair_search_request.response_type,
         **filter_params,
