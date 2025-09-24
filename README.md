@@ -108,3 +108,13 @@ curl -X POST "http://localhost:8080/pair-search" \
       "second-bbox": [13.0, 48.0, 14.5, 49.0],
       "limit": 50,
       "filter
+```
+
+---
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue to discuss your ideas or submit a pull request with your changes.
+
+## 📜 License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
