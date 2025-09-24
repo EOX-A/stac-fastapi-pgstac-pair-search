@@ -41,7 +41,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/mapchete/${{ matrix.image-name }}
+          images: ${{ env.REGISTRY }}/eox-a/${{ matrix.image-name }}
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
