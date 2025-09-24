@@ -1,6 +1,6 @@
 # STAC Pair Search Extension for stac-fastapi-pgstac
 
-[![CI/CD](https://github.com/EOX-A/stac-fastapi-pgstac-pair-search/actions/workflows/ci.yml/badge.svg)](https://github.com/EOX-A/stac-fastapi-pgstac-pair-search/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/EOX-A/stac-fastapi-pgstac-pair-search/actions/workflows/ci.yml/badge.svg)](https://github.com/EOX-A/stac-fastapi-pgstac-pair-search/actions/workflows/python-package.yml)
 [![PyPI package](https://img.shields.io/badge/pypi-stac-fastapi-pgstac-pair-search-blue)](https://pypi.org/project/stac-fastapi-pgstac-pair-search/)
 [![PyPI version](https://img.shields.io/pypi/v/stac-fastapi-pgstac-pair-search.svg)](https://pypi.org/project/stac-fastapi-pgstac-pair-search/)
 [![GitHub license](https://img.shields.io/github/license/EOX-A/stac-fastapi-pgstac-pair-search)](https://github.com/EOX-A/stac-fastapi-pgstac-pair-search/blob/main/LICENSE)
