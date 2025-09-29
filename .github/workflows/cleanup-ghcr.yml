@@ -25,6 +25,6 @@ jobs:
             account-type: org
             org-name: eox-a
             keep-at-least: 5
-            skip-tags: '^(latest|\d+\.\d+(\.\d+)?)$'
+            skip-tags: '^(latest|\d+\.\d+(\.\d+)?|\d{4}\.\d{1,2}\.\d{1,2})$'
             token: ${{ secrets.GITHUB_TOKEN }}
             token-type: github-token
