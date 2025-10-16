@@ -11,13 +11,13 @@ from stac_fastapi_pgstac_pair_search.models import PairSearchRequest
 class PairSearchConformanceClasses(str, Enum):
     """Conformance classes for the Pair-Search extension."""
 
-    SearchCore = "https://api.stacspec.org/v0.0.1/pair-search"
-    Query = "https://api.stacspec.org/v0.0.1/pair-search#query"
-    CQL2NumberDifference = "https://eox.at/ext/cq12/1.0/conf/n_diff"
-    CQL2TimeDifference = "https://eox.at/ext/cq12/1.0/conf/t_diff"
-    CQL2TimeStart = "https://eox.at/ext/cq12/1.0/conf/t_start"
-    CQL2TimeEnd = "https://eox.at/ext/cq12/1.0/conf/t_end"
-    CQL2RelativeGeometryOverlap = "https://eox.at/ext/cq12/1.0/conf/s_raoverlap"
+    SearchCore = "https://foo.bar/v0.0.1/pair-search"
+    Query = "https://foo.bar/v0.0.1/pair-search#query"
+    CQL2NumberDifference = "https://foo.bar/ext/cq12/1.0/conf/n_diff"
+    CQL2TimeDifference = "https://foo.bar/ext/cq12/1.0/conf/t_diff"
+    CQL2TimeStart = "https://foo.bar/ext/cq12/1.0/conf/t_start"
+    CQL2TimeEnd = "https://foo.bar/ext/cq12/1.0/conf/t_end"
+    CQL2RelativeGeometryOverlap = "https://foo.bar/ext/cq12/1.0/conf/s_raoverlap"
 
 
 @attr.s
