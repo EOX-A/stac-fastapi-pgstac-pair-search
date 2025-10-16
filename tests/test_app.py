@@ -9,6 +9,44 @@ def test_app(client):
     assert response.json()
 
 
+@pytest.mark.parametrize(
+    "class_name",
+    [
+        "pair-search",
+        "number-difference",
+        "time-difference",
+        "relative-geometry-overlap",
+    ],
+)
+def test_conformance(client, class_name):
+    """
+    {
+        "conformsTo": [
+            "https://api.stacspec.org/v1.0.0/core",
+            "https://api.stacspec.org/v1.0.0/item-search",
+            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
+            "...",
+            "// Your new Pair Search classes //",
+            "https://api.stacspec.org/v1.0.0/pair-search",
+            "// Your custom CQL2 extension classes //",
+            "https://eox.at/ext/cq12/1.0/conf/number-difference",
+            "https://eox.at/ext/cq12/1.0/conf/time-difference",
+            "https://eox.at/ext/cq12/1.0/conf/relative-geometry-overlap"
+        ]
+    }
+    """
+
+    response = client.get("/conformance")
+    assert response.status_code == 200
+    assert response.json()
+
+    for conformance_class_uri in response.json()["conformsTo"]:
+        if class_name in conformance_class_uri:
+            break
+    else:
+        raise ValueError(f"{class_name} not found")
+
+
 def test_search(client):
     response = client.get("/search")
     assert response.status_code == 200
