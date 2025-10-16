@@ -4,7 +4,7 @@ from typing import Dict, Optional, List, Annotated, Any, Literal, Tuple
 
 import cql2
 from fastapi import Query
-from pydantic import Field, AfterValidator, BaseModel, model_validator
+from pydantic import Field, AfterValidator, BaseModel, model_validator, NonNegativeInt
 from datetime import datetime as dt
 from stac_fastapi.extensions.core.filter.request import FilterLang
 from stac_fastapi.types.search import Limit, APIRequest, BaseSearchPostRequest
@@ -40,6 +40,11 @@ class PairSearchRequest(BaseModel, APIRequest):
     limit: Optional[Limit] = Field(
         10,
         description="Limits the number of results that are included in each page of the response (capped to 10_000).",  # noqa: E501
+    )
+
+    offset: Optional[NonNegativeInt] = Field(
+        0,
+        description="Offset from the first record. Can be used to paginate results.",
     )
 
     first_bbox: Annotated[Optional[BBox], AfterValidator(validate_bbox)] = Field(
