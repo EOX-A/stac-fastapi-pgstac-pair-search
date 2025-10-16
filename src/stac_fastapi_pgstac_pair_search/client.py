@@ -19,6 +19,7 @@ from stac_fastapi.types.stac import ItemCollection
 from stac_pydantic.item import Item
 
 from stac_fastapi_pgstac_pair_search.models import PairSearchRequest, PairSearchLinks
+from stac_fastapi_pgstac_pair_search.extensions.pair_search import PairSearchExtension
 
 
 logger = logging.getLogger(__name__)
@@ -217,6 +218,8 @@ def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
 
 
 def register_pair_search(api: StacApi):
+    """Shoehorn pair-search on an instantiated StacApi."""
+
     # initialize the client
     pair_search_client = PairSearchClient(
         stac_version=api.stac_version,
@@ -226,6 +229,12 @@ def register_pair_search(api: StacApi):
         extensions=api.extensions,
     )
 
+    # this is required to add conformance classes:
+    pair_search_extension = PairSearchExtension()
+    api.extensions.append(pair_search_extension)
+    api.client.extensions.append(pair_search_extension)
+
+    # add api routes:
     # POST /pair-search
     api.app.add_api_route(
         name="Pair Search",

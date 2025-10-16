@@ -1,0 +1,50 @@
+import attr
+from enum import Enum
+from typing import List, Optional
+
+from fastapi import FastAPI
+from stac_fastapi.types.extension import ApiExtension
+
+from stac_fastapi_pgstac_pair_search.models import PairSearchRequest
+
+
+class PairSearchConformanceClasses(str, Enum):
+    """Conformance classes for the Pair-Search extension."""
+
+    SearchCore = "https://foo.bar/v0.0.1/pair-search"
+    Query = "https://foo.bar/v0.0.1/pair-search#query"
+    CQL2NumberDifference = "https://foo.bar/ext/cq12/1.0/conf/n_diff"
+    CQL2TimeDifference = "https://foo.bar/ext/cq12/1.0/conf/t_diff"
+    CQL2TimeStart = "https://foo.bar/ext/cq12/1.0/conf/t_start"
+    CQL2TimeEnd = "https://foo.bar/ext/cq12/1.0/conf/t_end"
+    CQL2RelativeGeometryOverlap = "https://foo.bar/ext/cq12/1.0/conf/s_raoverlap"
+
+
+@attr.s
+class PairSearchExtension(ApiExtension):
+    """Query Extension.
+
+    The Query extension adds an additional `query` parameter to `/search` requests which
+    allows the caller to perform queries against item metadata (ex. find all images with
+    cloud cover less than 15%).
+    https://github.com/stac-api-extensions/query
+    """
+
+    GET = PairSearchRequest
+    POST = PairSearchRequest
+
+    conformance_classes: List[str] = attr.ib(
+        factory=lambda: PairSearchConformanceClasses
+    )
+    schema_href: Optional[str] = attr.ib(default=None)
+
+    def register(self, app: FastAPI) -> None:
+        """Register the extension with a FastAPI application.
+
+        Args:
+            app: target FastAPI application.
+
+        Returns:
+            None
+        """
+        pass

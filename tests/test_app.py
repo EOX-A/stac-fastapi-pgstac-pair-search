@@ -9,6 +9,29 @@ def test_app(client):
     assert response.json()
 
 
+@pytest.mark.parametrize(
+    "class_name",
+    [
+        "pair-search",
+        "n_diff",
+        "t_diff",
+        "t_start",
+        "t_end",
+        "s_raoverlap",
+    ],
+)
+def test_conformance(client, class_name):
+    response = client.get("/conformance")
+    assert response.status_code == 200
+    assert response.json()
+
+    for conformance_class_uri in response.json()["conformsTo"]:
+        if class_name in conformance_class_uri:
+            break
+    else:
+        raise ValueError(f"{class_name} not found")
+
+
 def test_search(client):
     response = client.get("/search")
     assert response.status_code == 200
