@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, Set, List, Tuple
@@ -181,60 +182,64 @@ class PairSearchClient(CoreCrudClient):
 
         collection["features"] = cleaned_features
         if cleaned_features:
-            collection["links"] = self._get_search_links(
+            collection["links"] = await self._get_search_links(
                 search_request=search_request, request=request
             )
 
         return collection
 
-    def _get_search_links(
+    async def _get_search_links(
         self, search_request: PairSearchRequest, request: Request
     ) -> List[Dict[str, str]]:
         """Take existing request and edit offset."""
         links = []
         next_page_offset = search_request.offset + search_request.limit
-        params = dict(request.query_params.multi_items(), offset=next_page_offset)
+        prev_page_offset = max(search_request.offset - search_request.limit, 0)
         if request.method == "GET":
+            query_params = request.query_params.multi_items()
             links.append(
                 {
                     "rel": "next",
-                    "href": request.url.replace_query_params(**params),
+                    "href": request.url.replace_query_params(
+                        **dict(query_params, offset=next_page_offset)
+                    ),
                     "type": "application/geo+json",
                 }
             )
+            # add link to previous page
+            if search_request.offset:
+                links.append(
+                    {
+                        "rel": "prev",
+                        "href": request.url.replace_query_params(
+                            **dict(
+                                query_params,
+                                offset=prev_page_offset,
+                            )
+                        ),
+                        "type": "application/geo+json",
+                    }
+                )
         elif request.method == "POST":
+            body = await request.body()
             links.append(
                 {
                     "rel": "next",
                     "href": request.url,
                     "type": "application/geo+json",
                     "method": "POST",
-                    "body": params,
+                    "body": dict(json.loads(body), offset=next_page_offset),
                 }
             )
-
-        # every offset has a prior page
-        if search_request.offset:
-            params = dict(
-                request.query_params.multi_items(),
-                offset=max(search_request.offset - search_request.limit, 0),
-            )
-            if request.method == "GET":
+            # add link to previous page
+            if search_request.offset:
                 links.append(
                     {
                         "rel": "prev",
-                        "href": request.url.replace_query_params(**params),
-                        "type": "application/geo+json",
-                    }
-                )
-            elif request.method == "POST":
-                links.append(
-                    {
-                        "rel": "next",
                         "href": request.url,
                         "type": "application/geo+json",
                         "method": "POST",
-                        "body": params,
+                        "body": dict(json.loads(body), offset=prev_page_offset),
                     }
                 )
 
