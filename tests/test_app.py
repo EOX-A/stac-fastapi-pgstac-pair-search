@@ -13,29 +13,14 @@ def test_app(client):
     "class_name",
     [
         "pair-search",
-        "number-difference",
-        "time-difference",
-        "relative-geometry-overlap",
+        "n_diff",
+        "t_diff",
+        "t_start",
+        "t_end",
+        "s_raoverlap",
     ],
 )
 def test_conformance(client, class_name):
-    """
-    {
-        "conformsTo": [
-            "https://api.stacspec.org/v1.0.0/core",
-            "https://api.stacspec.org/v1.0.0/item-search",
-            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
-            "...",
-            "// Your new Pair Search classes //",
-            "https://api.stacspec.org/v1.0.0/pair-search",
-            "// Your custom CQL2 extension classes //",
-            "https://eox.at/ext/cq12/1.0/conf/number-difference",
-            "https://eox.at/ext/cq12/1.0/conf/time-difference",
-            "https://eox.at/ext/cq12/1.0/conf/relative-geometry-overlap"
-        ]
-    }
-    """
-
     response = client.get("/conformance")
     assert response.status_code == 200
     assert response.json()
