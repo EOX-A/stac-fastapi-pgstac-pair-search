@@ -29,7 +29,7 @@ services:
     command: bash -c "./scripts/wait-for-it.sh database:5432 && python -m stac_fastapi_pgstac_pair_search.app"
 
   database:
-    image: ghcr.io/stac-utils/pgstac:v0.9.2
+    image: ghcr.io/stac-utils/pgstac:v0.9.8
     environment:
       - POSTGRES_USER=username
       - POSTGRES_PASSWORD=password
