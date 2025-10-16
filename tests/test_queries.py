@@ -15,24 +15,46 @@ def assert_pairs_match_control(
     )
     if response.status_code != 200:
         raise ValueError(f"Response: {response.status_code}, {response.text}")
+    matched = response.json().get("numberPairsMatched")
 
-    response_json = response.json()
+    def get_items(first_response, item_type: str):
+        items = []
+        response_json = first_response.json()
+        items.extend(response_json.get(item_type, []))
+
+        def _get_next_page(response):
+            for link in response.json()["links"]:
+                if link["rel"] == "next":
+                    return link
+            else:
+                return None
+
+        next_page = _get_next_page(first_response)
+        while next_page:
+            response = client.request(
+                method=method,
+                url=next_page["href"],
+                content=json.dumps(next_page["body"]) if method == "post" else None,
+            )
+            items.extend(response.json().get(item_type) or [])
+            next_page = _get_next_page(response)
+        return items
 
     if response_type == "pair":
-        assert response_json["numberPairsReturned"] == len(control)
-        feature_pairs = response_json["featurePairs"]
+        assert matched == len(control)
+        feature_pairs = get_items(response, "featurePairs")
         assert len(feature_pairs) == len(control)
         assert set(map(tuple, feature_pairs)) == set(map(tuple, control))
 
     elif response_type == "first-only":
-        features = response_json["features"]
+        features = get_items(response, "features")
         assert len(features) == len(control)
         feature_ids = {feature["id"] for feature in features}
         control_ids = {first for first, _ in control}
         assert feature_ids == control_ids
 
     elif response_type == "second-only":
-        features = response_json["features"]
+        features = get_items(response, "features")
         assert len(features) == len(control)
         feature_ids = {feature["id"] for feature in features}
         control_ids = {second for _, second in control}
@@ -41,7 +63,10 @@ def assert_pairs_match_control(
 
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
-def test_00_no_constraints(client, method: str, response_type: str, control_00: list):
+@pytest.mark.parametrize("paginate", [True, False])
+def test_00_no_constraints(
+    client, method: str, response_type: str, paginate: bool, control_00: list
+):
     """
     Test 00: No constraints
 
@@ -56,7 +81,7 @@ def test_00_no_constraints(client, method: str, response_type: str, control_00: 
         {
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
-            "limit": 100,
+            "limit": 10 if paginate else 100,
         },
         control_00,
     )
@@ -64,7 +89,10 @@ def test_00_no_constraints(client, method: str, response_type: str, control_00: 
 
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
-def test_01_pair_order(client, method: str, response_type: str, control_01: list):
+@pytest.mark.parametrize("paginate", [True, False])
+def test_01_pair_order(
+    client, method: str, response_type: str, paginate: bool, control_01: list
+):
     """
     Test 01: orderes pairs, first before second
 
@@ -81,7 +109,7 @@ def test_01_pair_order(client, method: str, response_type: str, control_01: list
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
-            "limit": 100,
+            "limit": 10 if paginate else 100,
             "filter": "second.datetime > first.datetime",
         },
         control_01,
@@ -90,7 +118,10 @@ def test_01_pair_order(client, method: str, response_type: str, control_01: list
 
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
-def test_02_area_overlap(client, method: str, response_type: str, control_02: list):
+@pytest.mark.parametrize("paginate", [True, False])
+def test_02_area_overlap(
+    client, method: str, response_type: str, paginate: bool, control_02: list
+):
     """
     Test 02: pairs with 75% area overlap
 
@@ -106,7 +137,7 @@ def test_02_area_overlap(client, method: str, response_type: str, control_02: li
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
-            "limit": 100,
+            "limit": 10 if paginate else 100,
             "filter": "S_RAOVERLAP(first.geometry, second.geometry, 'min') > 0.75",
         },
         control_02,
@@ -115,7 +146,10 @@ def test_02_area_overlap(client, method: str, response_type: str, control_02: li
 
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
-def test_03_wrs_grid(client, method: str, response_type: str, control_03: list):
+@pytest.mark.parametrize("paginate", [True, False])
+def test_03_wrs_grid(
+    client, method: str, response_type: str, paginate: bool, control_03: list
+):
     """
     Test 03: pairs sharing the same WRS grid
 
@@ -131,7 +165,7 @@ def test_03_wrs_grid(client, method: str, response_type: str, control_03: list):
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
-            "limit": 100,
+            "limit": 10 if paginate else 100,
             "filter": "first.grid:code = second.grid:code",
         },
         control_03,
@@ -140,7 +174,10 @@ def test_03_wrs_grid(client, method: str, response_type: str, control_03: list):
 
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
-def test_04_timedelta(client, method: str, response_type: str, control_04: list):
+@pytest.mark.parametrize("paginate", [True, False])
+def test_04_timedelta(
+    client, method: str, response_type: str, paginate: bool, control_04: list
+):
     """
     Test 04: second product more than 35 days after first
 
@@ -157,7 +194,7 @@ def test_04_timedelta(client, method: str, response_type: str, control_04: list)
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
-            "limit": 100,
+            "limit": 10 if paginate else 100,
             "filter": "second.datetime > first.datetime and T_DIFF(first.datetime, second.datetime) > '35 days'",
         },
         control_04,
@@ -166,7 +203,10 @@ def test_04_timedelta(client, method: str, response_type: str, control_04: list)
 
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
-def test_05_same_track(client, method: str, response_type: str, control_05: list):
+@pytest.mark.parametrize("paginate", [True, False])
+def test_05_same_track(
+    client, method: str, response_type: str, paginate: bool, control_05: list
+):
     """
     Test 05: second after first, the same track/frame (grid code)
 
@@ -182,7 +222,7 @@ def test_05_same_track(client, method: str, response_type: str, control_05: list
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
-            "limit": 100,
+            "limit": 10 if paginate else 100,
             "filter": "first.grid:code = second.grid:code and second.datetime > first.datetime",
         },
         control_05,
@@ -191,8 +231,9 @@ def test_05_same_track(client, method: str, response_type: str, control_05: list
 
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
+@pytest.mark.parametrize("paginate", [True, False])
 def test_06_timedelta_overlap(
-    client, method: str, response_type: str, control_06: list
+    client, method: str, response_type: str, paginate: bool, control_06: list
 ):
     """
     Test 06: second product more than 35 days after first and 75% area overlap
@@ -210,7 +251,7 @@ def test_06_timedelta_overlap(
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
-            "limit": 100,
+            "limit": 10 if paginate else 100,
             "filter": "second.datetime > first.datetime and T_DIFF(first.datetime, second.datetime) > '35 days' and S_RAOVERLAP(first.geometry, second.geometry, 'min') > 0.75",
         },
         control_06,
@@ -219,7 +260,10 @@ def test_06_timedelta_overlap(
 
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize("response_type", ["pair", "first-only", "second-only"])
-def test_07_wkt_overlap(client, method: str, response_type: str, control_07: list):
+@pytest.mark.parametrize("paginate", [True, False])
+def test_07_wkt_overlap(
+    client, method: str, response_type: str, paginate: bool, control_07: list
+):
     # ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000
     assert_pairs_match_control(
         client,
@@ -229,7 +273,7 @@ def test_07_wkt_overlap(client, method: str, response_type: str, control_07: lis
             "first-collections": ["ENVISAT.ASA.IMS_1P"],
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
-            "limit": 100,
+            "limit": 10 if paginate else 100,
             "filter": "S_RAOVERLAP(first.geometry, 'POLYGON ((6 43, 7.5 43, 7.5 44, 6 44, 6 43))', 'min') > 0.75",
         },
         control_07,
