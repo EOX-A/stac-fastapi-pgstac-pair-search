@@ -17,7 +17,7 @@ all_pairs AS (
 limited_pairs AS (
     SELECT id1, id2, first, second
     FROM all_pairs
-    OFFSET 0
+    OFFSET :offset
     LIMIT :limit
 ),
 all_features AS (

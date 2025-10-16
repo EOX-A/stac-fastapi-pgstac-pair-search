@@ -89,14 +89,21 @@ def ingest_data(
             post_or_put(urljoin(app_host, "/collections"), json.loads(src.read()))
 
         # ingest downloaded items
-        for item_json in tqdm.tqdm(
-            os.listdir(collection_dir + "/items"), desc="ingesting items", unit=" items"
-        ):
-            with open(f"{collection_dir}/items/{item_json}", "r") as src:
-                post_or_put(
-                    urljoin(app_host, f"/collections/{collection_name}/items"),
-                    json.loads(src.read()),
+        item_collection = {
+            "type": "FeatureCollection",
+            "features": [
+                json.loads(open(f"{collection_dir}/items/{item_json}").read())
+                for item_json in tqdm.tqdm(
+                    os.listdir(collection_dir + "/items"),
+                    desc="ingesting items",
+                    unit=" items",
                 )
+            ],
+        }
+        post_or_put(
+            urljoin(app_host, f"/collections/{collection_name}/items"),
+            item_collection,
+        )
 
     # load queryables
     print("Loading queryables")

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, Set, List, Tuple
@@ -12,7 +13,7 @@ from stac_fastapi.api.models import GeoJSONResponse, JSONResponse
 from stac_fastapi.pgstac.app import StacApi
 from stac_fastapi.pgstac.config import Settings
 from stac_fastapi.pgstac.core import CoreCrudClient
-from stac_fastapi.pgstac.models.links import ItemLinks, PagingLinks
+from stac_fastapi.pgstac.models.links import ItemLinks
 from stac_fastapi.pgstac.utils import filter_fields
 from stac_fastapi.types.errors import InvalidQueryParameter
 from stac_fastapi.types.stac import ItemCollection
@@ -122,17 +123,6 @@ class PairSearchClient(CoreCrudClient):
             raise InvalidQueryParameter(
                 f"Datetime parameter {search_request.datetime} is invalid."
             ) from e
-        # Starting in pgstac 0.9.0, the `next` and `prev` tokens are returned in spec-compliant links with method GET
-        next_from_link: Optional[str] = None
-        prev_from_link: Optional[str] = None
-        for link in items.get("links", []):
-            if link.get("rel") == "next":
-                next_from_link = link.get("href").split("token=next:")[1]
-            if link.get("rel") == "prev":
-                prev_from_link = link.get("href").split("token=prev:")[1]
-
-        next: Optional[str] = items.pop("next", next_from_link)
-        prev: Optional[str] = items.pop("prev", prev_from_link)
         collection = ItemCollection(**items)
 
         fields = getattr(search_request, "fields", None)
@@ -191,12 +181,69 @@ class PairSearchClient(CoreCrudClient):
                 cleaned_features.append(feature)
 
         collection["features"] = cleaned_features
-        collection["links"] = await PagingLinks(
-            request=request,
-            next=next,
-            prev=prev,
-        ).get_links()
+        if cleaned_features:
+            collection["links"] = await self._get_search_links(
+                search_request=search_request, request=request
+            )
+
         return collection
+
+    async def _get_search_links(
+        self, search_request: PairSearchRequest, request: Request
+    ) -> List[Dict[str, str]]:
+        """Take existing request and edit offset."""
+        links = []
+        next_page_offset = search_request.offset + search_request.limit
+        prev_page_offset = max(search_request.offset - search_request.limit, 0)
+        if request.method == "GET":
+            query_params = request.query_params.multi_items()
+            links.append(
+                {
+                    "rel": "next",
+                    "href": request.url.replace_query_params(
+                        **dict(query_params, offset=next_page_offset)
+                    ),
+                    "type": "application/geo+json",
+                }
+            )
+            # add link to previous page
+            if search_request.offset:
+                links.append(
+                    {
+                        "rel": "prev",
+                        "href": request.url.replace_query_params(
+                            **dict(
+                                query_params,
+                                offset=prev_page_offset,
+                            )
+                        ),
+                        "type": "application/geo+json",
+                    }
+                )
+        elif request.method == "POST":
+            body = await request.body()
+            links.append(
+                {
+                    "rel": "next",
+                    "href": request.url,
+                    "type": "application/geo+json",
+                    "method": "POST",
+                    "body": dict(json.loads(body), offset=next_page_offset),
+                }
+            )
+            # add link to previous page
+            if search_request.offset:
+                links.append(
+                    {
+                        "rel": "prev",
+                        "href": request.url,
+                        "type": "application/geo+json",
+                        "method": "POST",
+                        "body": dict(json.loads(body), offset=prev_page_offset),
+                    }
+                )
+
+        return links
 
 
 def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
@@ -212,6 +259,7 @@ def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
             exclude_none=True, by_alias=True
         ),
         limit=pair_search_request.limit or 10,
+        offset=pair_search_request.offset or 0,
         response_type=pair_search_request.response_type,
         **filter_params,
     )
