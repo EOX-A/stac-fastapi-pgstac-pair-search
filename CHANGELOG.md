@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.4 - 2025-10-21
+
+* make sure to convert search limit from environment to int
+
+
 ## 0.0.3 - 2025-10-21
 
 * increased the single collection search limit to 1000; make it configurable via environment variable PAIR_SEARCH_COLLECTION_SEARCH_LIMIT (#10)
