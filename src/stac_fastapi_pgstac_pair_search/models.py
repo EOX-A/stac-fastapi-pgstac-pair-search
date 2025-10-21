@@ -235,8 +235,10 @@ Remember to URL encode the CQL2-JSON if using GET""",
             intersects=self.first_intersects,
             ids=self.first_ids,
             collections=self.first_collections,
-            limit=os.getenv(
-                "PAIR_SEARCH_COLLECTION_SEARCH_LIMIT", COLLECTION_SEARCH_LIMIT
+            limit=int(
+                os.getenv(
+                    "PAIR_SEARCH_COLLECTION_SEARCH_LIMIT", COLLECTION_SEARCH_LIMIT
+                )
             ),
         )
 
@@ -247,8 +249,10 @@ Remember to URL encode the CQL2-JSON if using GET""",
             intersects=self.second_intersects,
             ids=self.second_ids,
             collections=self.second_collections,
-            limit=os.getenv(
-                "PAIR_SEARCH_COLLECTION_SEARCH_LIMIT", COLLECTION_SEARCH_LIMIT
+            limit=int(
+                os.getenv(
+                    "PAIR_SEARCH_COLLECTION_SEARCH_LIMIT", COLLECTION_SEARCH_LIMIT
+                )
             ),
         )
 
