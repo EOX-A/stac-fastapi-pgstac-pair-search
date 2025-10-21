@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -187,16 +188,25 @@ Remember to URL encode the CQL2-JSON if using GET""",
     @model_validator(mode="before")
     def validate_spatial(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         for prefix in ["first", "second"]:
-            if (
-                values.get(f"{prefix}-intersects")
-                and values.get(f"{prefix}-bbox") is not None
-            ):
+            bbox = values.get(f"{prefix}-bbox")
+            intersects = values.get(f"{prefix}-intersects")
+            collections = values.get(f"{prefix}-collections")
+            ids = values.get(f"{prefix}-ids")
+            if bbox and intersects:
                 raise ValueError(
                     f"{prefix}-intersects and {prefix}-bbox parameters are mutually exclusive"
                 )
-            collections = values.get(f"{prefix}-collections")
+            if bbox:
+                if isinstance(bbox, str):
+                    values[f"{prefix}-bbox"] = list(map(float, bbox.split(",")))
+            if intersects:
+                if isinstance(intersects, str):
+                    values[f"{prefix}-intersects"] = json.loads(intersects)
             if isinstance(collections, str):
                 values[f"{prefix}-collections"] = collections.split(",")
+            if ids:
+                if isinstance(ids, str):
+                    values[f"{prefix}-ids"] = [ids]
         filter_expr = values.get("filter_expr")
         if filter_expr:
             try:
