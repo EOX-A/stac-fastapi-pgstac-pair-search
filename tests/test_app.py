@@ -342,10 +342,53 @@ def test_ids(client, method: str, first_ids, second_ids):
                 assert second == intersecting_id
 
 
-# https://pair-search-demo.eox.at/catalogue/pair-search?
-#   response-type=pair&
-#   first-collection=ASA_IMS_1P&
-#   second-collection=ASA_IMS_1P&
-#   first-bbox=12.6,41.8,12.7,41.9&
-#   first-datetime=2003-01-01T00:00Z/2004-01-01T00:00Z&
-#   filter=((N_DIFF(second.oads:baseline_perpendicular_offset, first.oads:baseline_perpendicular_offset) BETWEEN-500 AND 500) AND (T_DIFF(T_START(first.datetime),T_START(seconds.datetime)) BETWEEN TimeDelta('0D') ANDTimeDelta('356D') AND (first.sat:orbit_state = second.sat:orbit_state)AND (first.sar:beam_id = second.sar:beam_id) AND(first.sar:polarization = second.sar:polarization) AND(first.oads:wrs_longitude_grid = second.oads:wrs_longitude_grid) AND(first.oads:wrs_latitude_grid = second.oads:wrs_latitude_grid) AND(first.oads:mission_phase = second.oads:mission_phase))
+# first-datetime, second-datetime
+@pytest.mark.parametrize("method", ["get", "post"])
+@pytest.mark.parametrize(
+    "first_datetime",
+    [None, "2010-06-02T09:49:53.149000Z", "2010-06-02T00:00:00Z/2010-06-02T23:59:59Z"],
+)
+@pytest.mark.parametrize(
+    "second_datetime",
+    [None, "2010-06-02T09:49:53.149000Z", "2010-06-02T00:00:00Z/2010-06-02T23:59:59Z"],
+)
+def test_datetime(client, method: str, first_datetime, second_datetime):
+    # bbox only intersects with product ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000
+    intersecting_id = "ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000"
+    params = {
+        "first-collections": ["ENVISAT.ASA.IMS_1P"],
+        "second-collections": ["ENVISAT.ASA.IMS_1P"],
+    }
+    if first_datetime:
+        params["first-datetime"] = first_datetime
+    if second_datetime:
+        params["second-datetime"] = second_datetime
+
+    response = client.request(
+        method=method,
+        url="/pair-search",
+        params=params if method == "get" else None,
+        content=json.dumps(params) if method == "post" else None,
+    )
+    if response.status_code != 200:
+        raise ValueError(f"Response: {response.status_code}, {response.text}")
+
+    response_json = response.json()
+    assert "numberPairsReturned" in response_json
+    assert "numberPairsMatched" in response_json
+
+    # special case: if both bboxes are set, no pairs are returned, because there is
+    # only one product
+    if first_datetime and second_datetime:
+        assert response_json["numberPairsReturned"] == 0
+        assert response_json["numberPairsMatched"] == 0
+        assert not response_json["featurePairs"]
+    else:
+        assert response_json["numberPairsReturned"] > 0
+        assert response_json["numberPairsMatched"] > 0
+        assert response_json["featurePairs"]
+        for first, second in response_json["featurePairs"]:
+            if first_datetime:
+                assert first == intersecting_id
+            if second_datetime:
+                assert second == intersecting_id
