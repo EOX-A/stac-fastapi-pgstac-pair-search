@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 from typing import Dict, Optional, List, Annotated, Any, Literal, Tuple
 
@@ -20,6 +21,8 @@ from stac_pydantic.shared import (
 )
 
 logger = logging.getLogger(__name__)
+
+COLLECTION_SEARCH_LIMIT = 1_000
 
 
 class PairSearchRequest(BaseModel, APIRequest):
@@ -222,6 +225,9 @@ Remember to URL encode the CQL2-JSON if using GET""",
             intersects=self.first_intersects,
             ids=self.first_ids,
             collections=self.first_collections,
+            limit=os.getenv(
+                "PAIR_SEARCH_COLLECTION_SEARCH_LIMIT", COLLECTION_SEARCH_LIMIT
+            ),
         )
 
     def second_search_params(self) -> BaseSearchPostRequest:
@@ -231,6 +237,9 @@ Remember to URL encode the CQL2-JSON if using GET""",
             intersects=self.second_intersects,
             ids=self.second_ids,
             collections=self.second_collections,
+            limit=os.getenv(
+                "PAIR_SEARCH_COLLECTION_SEARCH_LIMIT", COLLECTION_SEARCH_LIMIT
+            ),
         )
 
 
