@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.5 - 2025-10-23
+
+* fixed conformance URLs
+
+
 ## 0.0.4 - 2025-10-21
 
 * make sure to convert search limit from environment to int
