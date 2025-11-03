@@ -52,9 +52,7 @@ class PairSearchClient(CoreCrudClient):
             ItemCollection containing items which match the search criteria.
         """
         item_collection = await self._pair_search_base(
-            PairSearchRequest.model_validate(
-                request.query_params._dict, by_alias=True
-            ),
+            PairSearchRequest.model_validate(request.query_params._dict, by_alias=True),
             request=request,
         )
         links = await PairSearchLinks(request=request).get_links(
@@ -120,9 +118,7 @@ class PairSearchClient(CoreCrudClient):
         search_request.conf["nohydrate"] = settings.use_api_hydrate
 
         search_request_json = json.dumps(
-            self._sanitize_pair_search_request(
-                search_request.dict(by_alias=True)
-            )
+            self._sanitize_pair_search_request(search_request.dict(by_alias=True))
         )
 
         try:
@@ -139,8 +135,7 @@ class PairSearchClient(CoreCrudClient):
 
         # extract pagination information and reset the links
         link_parameters = {
-            link.get("rel"): link.get("parameters")
-            for link in items.get("links") or []
+            link.get("rel"): link.get("parameters") for link in items.get("links") or []
         }
         items["links"] = []
 
@@ -148,12 +143,14 @@ class PairSearchClient(CoreCrudClient):
 
         collection["features"] = await self._finalize_items(
             collection.get("features") or [],
-            search_request=search_request, request=request,
+            search_request=search_request,
+            request=request,
         )
 
         collection["links"] = await self._get_search_links(
             link_parameters=link_parameters,
-            search_request=search_request, request=request
+            search_request=search_request,
+            request=request,
         )
 
         return collection
@@ -165,7 +162,7 @@ class PairSearchClient(CoreCrudClient):
         """Fix pair search parameters to format expected by the SQL query."""
 
         def _fix_filter(query):
-            """ fix some issues introduced by the buggy cql2 v0.4.x parser """
+            """fix some issues introduced by the buggy cql2 v0.4.x parser"""
             if isinstance(query, float):
                 if int(query) == query:
                     return int(query)
@@ -212,10 +209,11 @@ class PairSearchClient(CoreCrudClient):
         return query
 
     async def _finalize_items(
-        self, features: list[Item],
-        search_request: PairSearchRequest, request: Request,
+        self,
+        features: list[Item],
+        search_request: PairSearchRequest,
+        request: Request,
     ) -> list[Item]:
-
         settings: Settings = request.app.state.settings
 
         fields = getattr(search_request, "fields", None)
@@ -254,7 +252,6 @@ class PairSearchClient(CoreCrudClient):
             )
 
             for feature in features:
-
                 base_item = await base_item_cache.get(feature.get("collection"))
 
                 # Exclude None values
@@ -280,8 +277,10 @@ class PairSearchClient(CoreCrudClient):
         return cleaned_features
 
     async def _get_search_links(
-        self, link_parameters: dict[str, dict[str, Any]],
-        search_request: PairSearchRequest, request: Request
+        self,
+        link_parameters: dict[str, dict[str, Any]],
+        search_request: PairSearchRequest,
+        request: Request,
     ) -> List[Dict[str, str]]:
         """Take existing request and edit offset."""
 
