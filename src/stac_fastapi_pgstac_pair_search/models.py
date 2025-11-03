@@ -1,15 +1,13 @@
 import json
 import logging
-import os
-import re
-from typing import Dict, Optional, List, Annotated, Any, Literal, Tuple
+from typing import Dict, Optional, List, Annotated, Any, Literal
 
 import cql2
 from fastapi import Query
 from pydantic import Field, AfterValidator, BaseModel, model_validator, NonNegativeInt
 from datetime import datetime as dt
 from stac_fastapi.extensions.core.filter.request import FilterLang
-from stac_fastapi.types.search import Limit, APIRequest, BaseSearchPostRequest
+from stac_fastapi.types.search import Limit, APIRequest
 from stac_fastapi.pgstac.models.links import BaseLinks
 from stac_pydantic.api.search import Intersection
 from stac_pydantic.links import Relations
