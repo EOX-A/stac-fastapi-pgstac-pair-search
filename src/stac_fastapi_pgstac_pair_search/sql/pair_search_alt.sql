@@ -437,8 +437,8 @@ CREATE OR REPLACE FUNCTION search_item_pairs(
     IN _where text DEFAULT NULL,
     IN _limit int DEFAULT NULL,
     IN _offset int DEFAULT NULL,
-    OUT first items,
-    OUT second items
+    OUT first pgstac.items,
+    OUT second pgstac.items
 ) RETURNS SETOF record AS $$
 DECLARE
     query text;
@@ -469,7 +469,7 @@ BEGIN
     RAISE NOTICE 'QUERY TOOK %ms', pgstac.age_ms(timer);
 RETURN;
 END;
-$$ LANGUAGE PLPGSQL SET SEARCH_PATH TO pairsearch,public;
+$$ LANGUAGE PLPGSQL SET SEARCH_PATH TO pgstac,public;
 
 
 -- search first or second distinct pair items
@@ -478,7 +478,7 @@ CREATE OR REPLACE FUNCTION search_item_single(
     _limit int DEFAULT NULL,
     _offset int DEFAULT NULL,
     selector text DEFAULT 'first' -- or 'second'
-) RETURNS SETOF items AS $$
+) RETURNS SETOF pgstac.items AS $$
 DECLARE
     query text;
     extra_clauses text = '';
@@ -510,7 +510,7 @@ BEGIN
     RETURN QUERY EXECUTE query;
     RAISE NOTICE 'QUERY TOOK %ms', pgstac.age_ms(timer);
 END;
-$$ LANGUAGE PLPGSQL SET SEARCH_PATH TO pairsearch,public;
+$$ LANGUAGE PLPGSQL SET SEARCH_PATH TO pgstac,public;
 
 
 -- Stripped-down version of the item search
@@ -518,7 +518,7 @@ CREATE OR REPLACE FUNCTION search_items(
     IN _where text DEFAULT NULL,
     IN _limit int DEFAULT NULL,
     IN _offset int DEFAULT NULL
-) RETURNS SETOF items AS $$
+) RETURNS SETOF pgstac.items AS $$
 DECLARE
     query text;
     where_clause text = '';
@@ -549,7 +549,7 @@ BEGIN
     RAISE NOTICE 'QUERY TOOK %ms', pgstac.age_ms(timer);
 RETURN;
 END;
-$$ LANGUAGE PLPGSQL SET SEARCH_PATH TO pairsearch,public;
+$$ LANGUAGE PLPGSQL SET SEARCH_PATH TO pgstac,public;
 
 
 -- Query parsing and conversion to WHERE clause predicates

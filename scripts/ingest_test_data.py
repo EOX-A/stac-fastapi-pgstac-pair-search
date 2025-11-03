@@ -97,7 +97,7 @@ def ingest_data(
                     os.listdir(collection_dir + "/items"),
                     desc="ingesting items",
                     unit=" items",
-                )
+                ) if item_json.endswith(".json")
             ],
         }
         post_or_put(
