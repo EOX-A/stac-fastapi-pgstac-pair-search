@@ -38,11 +38,7 @@ services:
       - PGPASSWORD=password
       - PGDATABASE=postgis
     volumes:
-      - ./src/stac_fastapi_pgstac_pair_search/sql/n_diff.sql:/docker-entrypoint-initdb.d/n_diff.sql
-      - ./src/stac_fastapi_pgstac_pair_search/sql/s_raoverlap.sql:/docker-entrypoint-initdb.d/s_raoverlap.sql
-      - ./src/stac_fastapi_pgstac_pair_search/sql/t_diff.sql:/docker-entrypoint-initdb.d/t_diff.sql
-      - ./src/stac_fastapi_pgstac_pair_search/sql/t_end.sql:/docker-entrypoint-initdb.d/t_end.sql
-      - ./src/stac_fastapi_pgstac_pair_search/sql/t_start.sql:/docker-entrypoint-initdb.d/t_start.sql
+      - ./src/stac_fastapi_pgstac_pair_search/sql/pair_search_alt.sql:/docker-entrypoint-initdb.d/pair_search_alt.sql
     ports:
       - "5439:5432"
     command: postgres -N 500

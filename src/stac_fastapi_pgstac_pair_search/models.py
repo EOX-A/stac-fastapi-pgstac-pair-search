@@ -41,13 +41,15 @@ class PairSearchRequest(BaseModel, APIRequest):
     #   important: collection selection
     # response-type=pair|first-only|second-only
 
+    conf: Optional[Dict] = None
+
     limit: Optional[Limit] = Field(
         10,
         description="Limits the number of results that are included in each page of the response (capped to 10_000).",  # noqa: E501
     )
 
-    offset: Optional[NonNegativeInt] = Field(
-        0,
+    offset: Optional[NonNegativeInt | None] = Field(
+        None,
         description="Offset from the first record. Can be used to paginate results.",
     )
 
@@ -117,59 +119,6 @@ Remember to URL encode the CQL2-JSON if using GET""",
     ] = "cql2-text"
 
     @property
-    def filter_sql(self) -> Tuple[str, Dict[str, Any]]:
-        """
-        Converts a CQL2 filter expression into a buildpg-compatible SQL template
-        and a dictionary of parameters.
-        """
-        if not self.filter_expr:
-            return "", {}
-
-        final_params: Dict[str, Any] = {}
-        param_counter = 0
-
-        expr = cql2.Expr(self.filter_expr)
-        query_template = "AND " + expr.to_sql()
-
-        def property_replacer(match: re.Match) -> str:
-            root_properties = {"geometry", "id", "collection"}
-            nonlocal param_counter
-            param_counter += 1
-            param_name = f"prop_{param_counter}"
-
-            prefix = match.group(1)  # 'first' or 'second'
-            prop_name = match.group(
-                2
-            )  # The property name, e.g., 'datetime' or 'grid:code'
-            # namespaced fields with colons need special handling:
-            if ":" in prop_name:
-                # The parameter value is the property name string itself
-                final_params[param_name] = prop_name
-                if prop_name == "geometry":
-                    return f"{prefix}.feature->'{param_name}'"
-                elif prop_name in root_properties:
-                    # Handle root properties like 'id'
-                    return f"{prefix}.feature->>:{param_name}"
-                else:
-                    # Handle nested properties like 'datetime'
-                    return f"{prefix}.feature->'properties'->>:{param_name}"
-            else:
-                if prop_name == "geometry":
-                    return f"{prefix}.feature->'{prop_name}'"
-                elif prop_name in root_properties:
-                    # Handle root properties like 'id'
-                    return f"{prefix}.feature->>'{prop_name}'"
-                else:
-                    # Handle nested properties like 'datetime'
-                    return f"{prefix}.feature->'properties'->>'{prop_name}'"
-
-        # This pattern finds 'first.' or 'second.' followed by a property name.
-        pattern = r'"?\b(first|second)\.([\w:]+)"?'
-        final_template = re.sub(pattern, property_replacer, query_template)
-        logger.debug(f"Final template: {final_template}, params: {final_params}")
-        return final_template, final_params
-
-    @property
     def start_date(self) -> Optional[dt]:
         start_date: Optional[dt] = None
         if self.datetime:
@@ -214,47 +163,6 @@ Remember to URL encode the CQL2-JSON if using GET""",
             except Exception as exc:
                 raise ValueError(f"Invalid CQL2 filter expression: {exc}") from exc
         return values
-
-    # @property
-    # def spatial_filter(self) -> Optional[Intersection]:
-    #     """Return a geojson-pydantic object representing the spatial filter for the search request.
-
-    #     Check for both because the ``bbox`` and ``intersects`` parameters are mutually exclusive.
-    #     """
-    #     if self.bbox:
-    #         return Polygon.from_bounds(*self.bbox)
-    #     if self.intersects:
-    #         return self.intersects
-    #     else:
-    #         return None
-
-    def first_search_params(self) -> BaseSearchPostRequest:
-        return BaseSearchPostRequest(
-            bbox=self.first_bbox,
-            datetime=self.first_datetime,
-            intersects=self.first_intersects,
-            ids=self.first_ids,
-            collections=self.first_collections,
-            limit=int(
-                os.getenv(
-                    "PAIR_SEARCH_COLLECTION_SEARCH_LIMIT", COLLECTION_SEARCH_LIMIT
-                )
-            ),
-        )
-
-    def second_search_params(self) -> BaseSearchPostRequest:
-        return BaseSearchPostRequest(
-            bbox=self.second_bbox,
-            datetime=self.second_datetime,
-            intersects=self.second_intersects,
-            ids=self.second_ids,
-            collections=self.second_collections,
-            limit=int(
-                os.getenv(
-                    "PAIR_SEARCH_COLLECTION_SEARCH_LIMIT", COLLECTION_SEARCH_LIMIT
-                )
-            ),
-        )
 
 
 class PairSearchLinks(BaseLinks):

@@ -2,8 +2,9 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Set, List, Tuple
+from typing import Dict, Any, Optional, Set, List
 
+from cql2 import Expr
 from asyncpg.exceptions import InvalidDatetimeFormatError
 from buildpg import render
 from fastapi import Request
@@ -16,6 +17,7 @@ from stac_fastapi.pgstac.core import CoreCrudClient
 from stac_fastapi.pgstac.models.links import ItemLinks
 from stac_fastapi.pgstac.utils import filter_fields
 from stac_fastapi.types.errors import InvalidQueryParameter
+from stac_fastapi.types.requests import get_base_url
 from stac_fastapi.types.stac import ItemCollection
 from stac_pydantic.item import Item
 
@@ -50,7 +52,9 @@ class PairSearchClient(CoreCrudClient):
             ItemCollection containing items which match the search criteria.
         """
         item_collection = await self._pair_search_base(
-            PairSearchRequest.model_validate(request.query_params._dict, by_alias=True),
+            PairSearchRequest.model_validate(
+                request.query_params._dict, by_alias=True
+            ),
             request=request,
         )
         links = await PairSearchLinks(request=request).get_links(
@@ -111,19 +115,108 @@ class PairSearchClient(CoreCrudClient):
 
         settings: Settings = request.app.state.settings
 
-        # TODO: don't know where this .conf is coming from
-        # search_request.conf = search_request.conf or {}
-        # search_request.conf["nohydrate"] = settings.use_api_hydrate
+        # INFO: check the SQL code to see what configuration options are applied
+        search_request.conf = search_request.conf or {}
+        search_request.conf["nohydrate"] = settings.use_api_hydrate
+
+        search_request_json = json.dumps(
+            self._sanitize_pair_search_request(
+                search_request.dict(by_alias=True)
+            )
+        )
 
         try:
             async with request.app.state.get_connection(request, "r") as conn:
-                query, params = render_sql(search_request)
+                query, params = render(
+                    "SELECT * FROM pair_search_alt(:request::text::jsonb);",
+                    request=search_request_json,
+                )
                 items = await conn.fetchval(query, *params)
         except InvalidDatetimeFormatError as e:
             raise InvalidQueryParameter(
                 f"Datetime parameter {search_request.datetime} is invalid."
             ) from e
+
+        # extract pagination information and reset the links
+        link_parameters = {
+            link.get("rel"): link.get("parameters")
+            for link in items.get("links") or []
+        }
+        items["links"] = []
+
         collection = ItemCollection(**items)
+
+        collection["features"] = await self._finalize_items(
+            collection.get("features") or [],
+            search_request=search_request, request=request,
+        )
+
+        collection["links"] = await self._get_search_links(
+            link_parameters=link_parameters,
+            search_request=search_request, request=request
+        )
+
+        return collection
+
+    def _sanitize_pair_search_request(
+        self,
+        query: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Fix pair search parameters to format expected by the SQL query."""
+
+        def _fix_filter(query):
+            """ fix some issues introduced by the buggy cql2 v0.4.x parser """
+            if isinstance(query, float):
+                if int(query) == query:
+                    return int(query)
+            if isinstance(query, dict):
+                if "op" in query:
+                    # negative number expressed as -1 * <positive number>
+                    if (
+                        query["op"] == "*"
+                        and query["args"][0] == -1
+                        and isinstance(query["args"][1], (float, int))
+                    ):
+                        return _fix_filter(-query["args"][1])
+                    # fix nested arguments
+                    query["args"] = [_fix_filter(item) for item in query["args"]]
+            return query
+
+        if query["filter"]:
+            if query["filter_lang"] == "cql2-text":
+                query["filter"] = Expr(query["filter"]).to_json()
+                query["filter_lang"] = "cql2-json"
+            query["filter"] = _fix_filter(query["filter"])
+        else:
+            query["filter"] = None
+
+        if query.get("fields"):
+            includes = set()
+            excludes = set()
+            for field in query["fields"]:
+                if field[0] == "-":
+                    excludes.add(field[1:])
+                elif field[0] == "+":
+                    includes.add(field[1:])
+                else:
+                    includes.add(field)
+
+            query["fields"] = {"include": includes, "exclude": excludes}
+
+        query = {
+            key: value
+            for key, value in query.items()
+            if value is not None and value != []
+        }
+
+        return query
+
+    async def _finalize_items(
+        self, features: list[Item],
+        search_request: PairSearchRequest, request: Request,
+    ) -> list[Item]:
+
+        settings: Settings = request.app.state.settings
 
         fields = getattr(search_request, "fields", None)
         include: Set[str] = fields.include if fields and fields.include else set()
@@ -160,8 +253,10 @@ class PairSearchClient(CoreCrudClient):
                 fetch_base_item=_get_base_item, request=request
             )
 
-            for feature in collection.get("features") or []:
+            for feature in features:
+
                 base_item = await base_item_cache.get(feature.get("collection"))
+
                 # Exclude None values
                 base_item = {k: v for k, v in base_item.items() if v is not None}
 
@@ -172,97 +267,68 @@ class PairSearchClient(CoreCrudClient):
                 item_id = feature.get("id")
 
                 feature = filter_fields(feature, include, exclude)
+
                 await _add_item_links(feature, collection_id, item_id)
 
                 cleaned_features.append(feature)
+
         else:
-            for feature in collection.get("features") or []:
+            for feature in features or []:
                 await _add_item_links(feature)
                 cleaned_features.append(feature)
 
-        collection["features"] = cleaned_features
-        if cleaned_features:
-            collection["links"] = await self._get_search_links(
-                search_request=search_request, request=request
-            )
-
-        return collection
+        return cleaned_features
 
     async def _get_search_links(
-        self, search_request: PairSearchRequest, request: Request
+        self, link_parameters: dict[str, dict[str, Any]],
+        search_request: PairSearchRequest, request: Request
     ) -> List[Dict[str, str]]:
         """Take existing request and edit offset."""
-        links = []
-        next_page_offset = search_request.offset + search_request.limit
-        prev_page_offset = max(search_request.offset - search_request.limit, 0)
+
+        base_url = get_base_url(request)
+
         if request.method == "GET":
-            query_params = request.query_params.multi_items()
-            links.append(
-                {
-                    "rel": "next",
+            query_params = dict(request.query_params.multi_items())
+
+            def _get_link(rel: str, extra_params: dict[str, Any] | None = None):
+                return {
+                    "rel": rel,
+                    "method": "GET",
                     "href": request.url.replace_query_params(
-                        **dict(query_params, offset=next_page_offset)
+                        **{**query_params, **(extra_params or {})}
                     ),
                     "type": "application/geo+json",
                 }
-            )
-            # add link to previous page
-            if search_request.offset:
-                links.append(
-                    {
-                        "rel": "prev",
-                        "href": request.url.replace_query_params(
-                            **dict(
-                                query_params,
-                                offset=prev_page_offset,
-                            )
-                        ),
-                        "type": "application/geo+json",
-                    }
-                )
+
         elif request.method == "POST":
-            body = await request.body()
-            links.append(
-                {
-                    "rel": "next",
-                    "href": request.url,
-                    "type": "application/geo+json",
+            query_params = await request.body()
+
+            def _get_link(rel: str, extra_params: dict[str, Any] | None = None):
+                return {
+                    "rel": rel,
                     "method": "POST",
-                    "body": dict(json.loads(body), offset=next_page_offset),
+                    "href": request.url,
+                    "body": {**query_params, **(extra_params or {})},
+                    "type": "application/geo+json",
                 }
-            )
-            # add link to previous page
-            if search_request.offset:
-                links.append(
-                    {
-                        "rel": "prev",
-                        "href": request.url,
-                        "type": "application/geo+json",
-                        "method": "POST",
-                        "body": dict(json.loads(body), offset=prev_page_offset),
-                    }
-                )
 
-        return links
+        def _generate_links():
+            yield {
+                "rel": "root",
+                "href": base_url,
+                "type": "application/json",
+            }
+            yield {
+                "rel": "self",
+                "href": request.url,
+                "type": "application/geo+json",
+            }
+            if "next" in link_parameters:
+                yield _get_link("next", link_parameters["next"])
+            if "prev" in link_parameters:
+                yield _get_link("prev", link_parameters["prev"])
 
-
-def render_sql(pair_search_request: PairSearchRequest) -> Tuple[str, List[Any]]:
-    filter_query, filter_params = pair_search_request.filter_sql
-    query = PAIR_SEARCH_SQL.replace("{filter_expr}", filter_query)
-    logger.debug(query)
-    return render(
-        query,
-        first_req=pair_search_request.first_search_params().model_dump_json(
-            exclude_none=True, by_alias=True
-        ),
-        second_req=pair_search_request.second_search_params().model_dump_json(
-            exclude_none=True, by_alias=True
-        ),
-        limit=pair_search_request.limit or 10,
-        offset=pair_search_request.offset or 0,
-        response_type=pair_search_request.response_type,
-        **filter_params,
-    )
+        return list(_generate_links())
 
 
 def register_pair_search(api: StacApi):
