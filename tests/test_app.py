@@ -25,12 +25,12 @@ def test_app(client):
 @pytest.mark.parametrize(
     "class_name",
     [
-        "pair-search",
-        "n_diff",
-        "t_diff",
-        "t_start",
-        "t_end",
-        "s_raoverlap",
+        "https://api.stacspec.org/1.0.0/pair-search",
+        "cql2/1.0/conf/number-difference",
+        "cql2/1.0/conf/relative-geometry-overlap",
+        "cql2/1.0/conf/time-difference",
+        "cql2/1.0/conf/time-end",
+        "cql2/1.0/conf/time-start",
     ],
 )
 def test_conformance(client, class_name):
@@ -39,7 +39,7 @@ def test_conformance(client, class_name):
     assert response.json()
 
     for conformance_class_uri in response.json()["conformsTo"]:
-        if class_name in conformance_class_uri:
+        if conformance_class_uri.endswith(class_name):
             break
     else:
         raise ValueError(f"{class_name} not found")
