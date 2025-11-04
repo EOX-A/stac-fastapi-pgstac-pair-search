@@ -133,33 +133,51 @@ Remember to URL encode the CQL2-JSON if using GET""",
 
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @model_validator(mode="before")
-    def validate_spatial(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        for prefix in ["first", "second"]:
-            bbox = values.get(f"{prefix}-bbox")
-            intersects = values.get(f"{prefix}-intersects")
-            collections = values.get(f"{prefix}-collections")
-            ids = values.get(f"{prefix}-ids")
+    def validate_inputs(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+
+        def _parse_list(key: str):
+            value = values.get(key)
+            if key and isinstance(value, str):
+                values[key] = value.split(",")
+            else:
+                values[key] = None
+
+        def _parse_spatial_selection(bbox_key, intersects_key):
+            bbox = values.get(bbox_key)
+            intersects = values.get(intersects_key)
             if bbox and intersects:
                 raise ValueError(
-                    f"{prefix}-intersects and {prefix}-bbox parameters are mutually exclusive"
+                    f"{intersects_key} and {bbox_key} parameters are mutually exclusive"
                 )
-            if bbox:
-                if isinstance(bbox, str):
-                    values[f"{prefix}-bbox"] = list(map(float, bbox.split(",")))
-            if intersects:
-                if isinstance(intersects, str):
-                    values[f"{prefix}-intersects"] = json.loads(intersects)
-            if isinstance(collections, str):
-                values[f"{prefix}-collections"] = collections.split(",")
-            if ids:
-                if isinstance(ids, str):
-                    values[f"{prefix}-ids"] = [ids]
-        filter_expr = values.get("filter_expr")
-        if filter_expr:
-            try:
-                cql2.Expr(filter_expr).validate()  # will raise if invalid
-            except Exception as exc:
-                raise ValueError(f"Invalid CQL2 filter expression: {exc}") from exc
+            if bbox and isinstance(bbox, str):
+                bbox = [float(value) for value in bbox.split(",")[:7]]
+                if len(bbox) != 4: # NOTE: 6 element bbox not supported
+                    raise ValueError(f"Invalid {bbox_key} input!")
+                values[bbox_key] = bbox
+            else:
+                values[bbox_key] = None
+            if intersects and isinstance(intersects, str):
+                values[intersects_key] = json.loads(intersects)
+            else:
+                values[bbox_key] = None
+
+        def _parse_cql2_expression(key: str):
+            filter_expr = values.get(key)
+            if filter_expr:
+                try:
+                    cql2.Expr(filter_expr).validate()  # will raise if invalid
+                except Exception as error:
+                    raise ValueError(f"Invalid CQL2 filter expression: {error}") from error
+            else:
+                values[key] = None
+
+        for prefix in ["first", "second"]:
+            _parse_spatial_selection(f"{prefix}-bbox", f"{prefix}-intersects")
+            _parse_list(f"{prefix}-collections")
+            _parse_list(f"{prefix}-ids")
+
+        _parse_cql2_expression("filter_expr")
+
         return values
 
 
