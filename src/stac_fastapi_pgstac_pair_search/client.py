@@ -301,6 +301,8 @@ class PairSearchClient(CoreCrudClient):
 
         elif request.method == "POST":
             query_params = await request.body()
+            if isinstance(query_params, bytes):
+                query_params = json.loads(query_params.decode("utf-8"))
 
             def _get_link(rel: str, extra_params: dict[str, Any] | None = None):
                 return {
