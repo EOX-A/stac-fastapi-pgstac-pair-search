@@ -109,7 +109,7 @@ class PairSearchClient(CoreCrudClient):
         Returns:
             ItemCollection containing items which match the search criteria.
         """
-        items: Dict[str, Any]
+        response: Dict[str, Any]
 
         settings: Settings = request.app.state.settings
 
@@ -127,7 +127,7 @@ class PairSearchClient(CoreCrudClient):
                     "SELECT * FROM pair_search_alt(:request::text::jsonb);",
                     request=search_request_json,
                 )
-                items = await conn.fetchval(query, *params)
+                response = await conn.fetchval(query, *params)
         except InvalidDatetimeFormatError as e:
             raise InvalidQueryParameter(
                 f"Datetime parameter {search_request.datetime} is invalid."
@@ -135,13 +135,13 @@ class PairSearchClient(CoreCrudClient):
 
         # extract pagination information and reset the links
         link_parameters = {
-            link.get("rel"): link.get("parameters") for link in items.get("links") or []
+            link.get("rel"): link.get("parameters") for link in response.get("links") or []
         }
-        items["links"] = []
+        response["links"] = []
 
-        collection = ItemCollection(**items)
+        collection = ItemCollection(**response)
 
-        collection["features"] = await self._finalize_items(
+        collection["features"] = await self._finalize_features(
             collection.get("features") or [],
             search_request=search_request,
             request=request,
@@ -208,7 +208,7 @@ class PairSearchClient(CoreCrudClient):
 
         return query
 
-    async def _finalize_items(
+    async def _finalize_features(
         self,
         features: list[Item],
         search_request: PairSearchRequest,
