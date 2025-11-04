@@ -279,7 +279,7 @@ def test_07_wkt_overlap(
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 10 if paginate else 100,
-            "filter": "S_RAOVERLAP(first.geometry, 'POLYGON ((6 43, 7.5 43, 7.5 44, 6 44, 6 43))', 'min') > 0.75",
+            "filter": "S_RAOVERLAP(first.geometry, POLYGON((6 43, 7.5 43, 7.5 44, 6 44, 6 43)), 'first') > 0.75",
         },
         control_07,
     )
