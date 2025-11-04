@@ -136,10 +136,9 @@ Remember to URL encode the CQL2-JSON if using GET""",
     def validate_inputs(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         def _parse_list(key: str):
             value = values.get(key)
-            if key and isinstance(value, str):
-                values[key] = value.split(",")
-            else:
-                values[key] = None
+            if value:
+                if isinstance(value, str):
+                    values[key] = value.split(",")
 
         def _parse_spatial_selection(bbox_key, intersects_key):
             bbox = values.get(bbox_key)
@@ -148,17 +147,12 @@ Remember to URL encode the CQL2-JSON if using GET""",
                 raise ValueError(
                     f"{intersects_key} and {bbox_key} parameters are mutually exclusive"
                 )
-            if bbox and isinstance(bbox, str):
-                bbox = [float(value) for value in bbox.split(",")[:7]]
-                if len(bbox) != 4:  # NOTE: 6 element bbox not supported
-                    raise ValueError(f"Invalid {bbox_key} input!")
-                values[bbox_key] = bbox
-            else:
-                values[bbox_key] = None
-            if intersects and isinstance(intersects, str):
-                values[intersects_key] = json.loads(intersects)
-            else:
-                values[bbox_key] = None
+            if bbox:
+                if isinstance(bbox, str):
+                    values[bbox_key] = [float(value) for value in bbox.split(",")[:7]]
+            if intersects:
+                if isinstance(intersects, str):
+                    values[intersects_key] = json.loads(intersects)
 
         def _parse_cql2_expression(key: str):
             filter_expr = values.get(key)
