@@ -68,8 +68,8 @@ BEGIN
               (SELECT jsonb_agg(format_item(item, _fields, _hydrated => hydrate)) FROM pair_items_distint) AS pair_items
         INTO temp;
 
-        _items = temp.pair_items;
-        pair_ids = temp.pair_ids;
+        _items := coalesce(temp.pair_items, '[]'::jsonb);
+        pair_ids := coalesce(temp.pair_ids, '[]'::jsonb);
 
         RAISE NOTICE 'pair-search[%s]: Time to fetch items: %ms', response_type, pgstac.age_ms(timer);
         timer := clock_timestamp();
@@ -85,7 +85,7 @@ BEGIN
             next_offset := _offset + _limit;
         END IF;
 
-    ELSIF response_type IN ('first-only', 'seconds-only') THEN
+    ELSIF response_type IN ('first-only', 'second-only') THEN
 
         SELECT jsonb_agg(format_item(item_records, _fields, _hydrated => hydrate))
         INTO _items
@@ -96,6 +96,8 @@ BEGIN
                 WHEN 'second-only' THEN 'second'
             END
         ) AS item_records;
+
+        _items := coalesce(_items, '[]'::jsonb);
 
         RAISE NOTICE 'pair-search[%s]: Time to fetch items: %ms', response_type, pgstac.age_ms(timer);
         timer := clock_timestamp();
@@ -111,7 +113,7 @@ BEGIN
         END IF;
 
     ELSE
-        RAISE EXCEPTION 'Invalid response type! %s', response_type;
+        RAISE EXCEPTION 'Invalid response type! %', response_type;
     END IF;
 
     IF _offset > 0 THEN
@@ -216,6 +218,8 @@ BEGIN
     SELECT jsonb_agg(format_item(item_records, _fields, _hydrated => hydrate))
     INTO _items
     FROM search_items(_where, _query_limit, _offset) AS item_records;
+
+    _items := coalesce(_items, '[]'::jsonb);
 
     RAISE NOTICE 'search: Time to fetch items: %ms', pgstac.age_ms(timer);
     timer := clock_timestamp();
@@ -333,11 +337,11 @@ BEGIN
     END IF;
 
     IF query ? 'first-collections' THEN
-        parts := parts || _collections_to_where(to_text_array(query->'first-collecitons'), 'first.');
+        parts := parts || _collections_to_where(to_text_array(query->'first-collections'), 'first.');
     END IF;
 
     IF query ? 'second-collections' THEN
-        parts := parts || _collections_to_where(to_text_array(query->'seond-collecitons'), 'second.');
+        parts := parts || _collections_to_where(to_text_array(query->'second-collections'), 'second.');
     END IF;
 
     IF query ? 'first-datetime' THEN
@@ -397,7 +401,7 @@ BEGIN
     END IF;
 
     IF query ? 'collections' THEN
-        parts := parts || _collections_to_where(to_text_array(query->'collecitons'));
+        parts := parts || _collections_to_where(to_text_array(query->'collections'));
     END IF;
 
     IF query ? 'datetime' THEN
@@ -569,7 +573,7 @@ CREATE OR REPLACE FUNCTION _collections_to_where(
     IN prefix text DEFAULT ''
 ) RETURNS text AS $$
 BEGIN
-    RETURN format('%scollections = ANY (%L) ', prefix, collections);
+    RETURN format('%scollection = ANY (%L) ', prefix, collections);
 END;
 $$ LANGUAGE PLPGSQL IMMUTABLE PARALLEL SAFE;
 
