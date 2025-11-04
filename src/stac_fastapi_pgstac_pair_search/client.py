@@ -135,7 +135,8 @@ class PairSearchClient(CoreCrudClient):
 
         # extract pagination information and reset the links
         link_parameters = {
-            link.get("rel"): link.get("parameters") for link in response.get("links") or []
+            link.get("rel"): link.get("parameters")
+            for link in response.get("links") or []
         }
         response["links"] = []
 

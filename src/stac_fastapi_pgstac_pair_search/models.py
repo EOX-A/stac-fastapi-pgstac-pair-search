@@ -134,7 +134,6 @@ Remember to URL encode the CQL2-JSON if using GET""",
     # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-validators for more information.
     @model_validator(mode="before")
     def validate_inputs(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-
         def _parse_list(key: str):
             value = values.get(key)
             if key and isinstance(value, str):
@@ -151,7 +150,7 @@ Remember to URL encode the CQL2-JSON if using GET""",
                 )
             if bbox and isinstance(bbox, str):
                 bbox = [float(value) for value in bbox.split(",")[:7]]
-                if len(bbox) != 4: # NOTE: 6 element bbox not supported
+                if len(bbox) != 4:  # NOTE: 6 element bbox not supported
                     raise ValueError(f"Invalid {bbox_key} input!")
                 values[bbox_key] = bbox
             else:
@@ -167,7 +166,9 @@ Remember to URL encode the CQL2-JSON if using GET""",
                 try:
                     cql2.Expr(filter_expr).validate()  # will raise if invalid
                 except Exception as error:
-                    raise ValueError(f"Invalid CQL2 filter expression: {error}") from error
+                    raise ValueError(
+                        f"Invalid CQL2 filter expression: {error}"
+                    ) from error
             else:
                 values[key] = None
 
