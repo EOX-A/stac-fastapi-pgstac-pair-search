@@ -1,6 +1,6 @@
 [project]
 name = "stac-fastapi-pgstac-pair-search"
-version = "0.0.1"
+version = "0.1.0"
 description = "pair-search extension of stac-fastapi-pgstac"
 readme = "README.md"
 authors = [
