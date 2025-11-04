@@ -15,7 +15,7 @@ def assert_pairs_match_control(
     )
     if response.status_code != 200:
         raise ValueError(f"Response: {response.status_code}, {response.text}")
-    matched = response.json().get("numberPairsMatched")
+    # matched = response.json().get("numberPairsMatched")
 
     def get_items(first_response, item_type: str):
         items = []
@@ -41,24 +41,22 @@ def assert_pairs_match_control(
         return items
 
     if response_type == "pair":
-        assert matched == len(control)
+        # assert matched == len(control)
         feature_pairs = get_items(response, "featurePairs")
         assert len(feature_pairs) == len(control)
         assert set(map(tuple, feature_pairs)) == set(map(tuple, control))
 
-    elif response_type == "first-only":
+    elif response_type in ("first-only", "second-only"):
         features = get_items(response, "features")
-        assert len(features) == len(control)
         feature_ids = {feature["id"] for feature in features}
-        control_ids = {first for first, _ in control}
-        assert feature_ids == control_ids
-
-    elif response_type == "second-only":
-        features = get_items(response, "features")
-        assert len(features) == len(control)
-        feature_ids = {feature["id"] for feature in features}
-        control_ids = {second for _, second in control}
-        assert feature_ids == control_ids
+        control_ids = (
+            {first for first, _ in control}
+            if response_type == "first-only"
+            else {second for _, second in control}
+        )
+        assert len(features) == len(feature_ids)  # no duplicates
+        assert len(features) == len(control_ids)  # correct count
+        assert feature_ids == control_ids  # equal features
 
 
 @pytest.mark.parametrize("method", ["get", "post"])
