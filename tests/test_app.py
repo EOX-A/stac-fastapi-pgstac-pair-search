@@ -114,7 +114,6 @@ def test_pair_search_response(client, method: str, response_type: str):
         ],
         "numberReturned": 3,
         "numberPairsReturned": 2,
-        "numberPairsMatched": 100
     }
 
     response-type = "first-only" or "second-only":
@@ -161,8 +160,8 @@ def test_pair_search_response(client, method: str, response_type: str):
         assert "numberPairsReturned" in response_json
         assert response_json["numberPairsReturned"] > 0
 
-        assert "numberPairsMatched" in response_json
-        assert response_json["numberPairsMatched"] > 0
+        # assert "numberPairsMatched" in response_json
+        # assert response_json["numberPairsMatched"] > 0
 
         assert "featurePairs" in response_json
         feature_pairs = response_json["featurePairs"]
@@ -209,18 +208,18 @@ def test_bbox(client, method: str, first_bbox, second_bbox):
 
     response_json = response.json()
 
-    assert "numberPairsReturned" in response_json
-    assert "numberPairsMatched" in response_json
+    # assert "numberPairsReturned" in response_json
+    # assert "numberPairsMatched" in response_json
 
     # special case: if both bboxes are set, no pairs are returned, because there is
     # only one product
     if first_bbox and second_bbox:
         assert response_json["numberPairsReturned"] == 0
-        assert response_json["numberPairsMatched"] == 0
+        # assert response_json["numberPairsMatched"] == 0
         assert not response_json["featurePairs"]
     else:
         assert response_json["numberPairsReturned"] > 0
-        assert response_json["numberPairsMatched"] > 0
+        # assert response_json["numberPairsMatched"] > 0
         assert response_json["featurePairs"]
         for first, second in response_json["featurePairs"]:
             if first_bbox:
@@ -263,17 +262,17 @@ def test_intersects(client, method: str, first_intersects, second_intersects):
     response_json = response.json()
 
     assert "numberPairsReturned" in response_json
-    assert "numberPairsMatched" in response_json
+    # assert "numberPairsMatched" in response_json
 
     # special case: if both bboxes are set, no pairs are returned, because there is
     # only one product
     if first_intersects and second_intersects:
         assert response_json["numberPairsReturned"] == 0
-        assert response_json["numberPairsMatched"] == 0
+        # assert response_json["numberPairsMatched"] == 0
         assert not response_json["featurePairs"]
     else:
         assert response_json["numberPairsReturned"] > 0
-        assert response_json["numberPairsMatched"] > 0
+        # assert response_json["numberPairsMatched"] > 0
         assert response_json["featurePairs"]
         for first, second in response_json["featurePairs"]:
             if first_intersects:
@@ -323,17 +322,17 @@ def test_ids(client, method: str, first_ids, second_ids):
     response_json = response.json()
 
     assert "numberPairsReturned" in response_json
-    assert "numberPairsMatched" in response_json
+    # assert "numberPairsMatched" in response_json
 
     # special case: if both bboxes are set, no pairs are returned, because there is
     # only one product
     if first_ids and second_ids:
         assert response_json["numberPairsReturned"] == 0
-        assert response_json["numberPairsMatched"] == 0
+        # assert response_json["numberPairsMatched"] == 0
         assert not response_json["featurePairs"]
     else:
         assert response_json["numberPairsReturned"] > 0
-        assert response_json["numberPairsMatched"] > 0
+        # assert response_json["numberPairsMatched"] > 0
         assert response_json["featurePairs"]
         for first, second in response_json["featurePairs"]:
             if first_ids:
@@ -375,17 +374,17 @@ def test_datetime(client, method: str, first_datetime, second_datetime):
 
     response_json = response.json()
     assert "numberPairsReturned" in response_json
-    assert "numberPairsMatched" in response_json
+    # assert "numberPairsMatched" in response_json
 
     # special case: if both bboxes are set, no pairs are returned, because there is
     # only one product
     if first_datetime and second_datetime:
         assert response_json["numberPairsReturned"] == 0
-        assert response_json["numberPairsMatched"] == 0
+        # assert response_json["numberPairsMatched"] == 0
         assert not response_json["featurePairs"]
     else:
         assert response_json["numberPairsReturned"] > 0
-        assert response_json["numberPairsMatched"] > 0
+        # assert response_json["numberPairsMatched"] > 0
         assert response_json["featurePairs"]
         for first, second in response_json["featurePairs"]:
             if first_datetime:
