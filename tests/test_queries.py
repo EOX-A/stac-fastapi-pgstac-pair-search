@@ -193,7 +193,10 @@ def test_04_timedelta(
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 10 if paginate else 100,
-            "filter": "second.datetime > first.datetime and T_DIFF(first.datetime, second.datetime) > '35 days'",
+            "filter": (
+                "second.datetime > first.datetime"
+                " AND T_DIFF(T_START(second.datetime), T_START(first.datetime)) > DURATION('P35D')"
+            ),
         },
         control_04,
     )
@@ -250,7 +253,11 @@ def test_06_timedelta_overlap(
             "second-collections": ["ENVISAT.ASA.IMS_1P"],
             "response-type": "pair",
             "limit": 10 if paginate else 100,
-            "filter": "second.datetime > first.datetime and T_DIFF(first.datetime, second.datetime) > '35 days' and S_RAOVERLAP(first.geometry, second.geometry, 'min') > 0.75",
+            "filter": (
+                "second.datetime > first.datetime"
+                " AND T_DIFF(T_START(second.datetime), T_START(first.datetime)) > DURATION('P35D')"
+                " AND S_RAOVERLAP(first.geometry, second.geometry, 'min') > 0.75"
+            ),
         },
         control_06,
     )
