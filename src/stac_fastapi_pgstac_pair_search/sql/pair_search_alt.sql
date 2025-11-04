@@ -731,12 +731,12 @@ BEGIN
     -- handle CQL2 operators
     IF query ? 'op' THEN
 
+        -- NOTE: AND and OR have variable number of arguments
         IF operator in ('and', 'or') THEN
-            template := CASE operator
-                WHEN 'and' THEN '(%s AND %s)'
-                WHEN 'or' THEN '(%s OR %s)'
-            END;
-            RETURN format(template, VARIADIC (pgstac.to_text_array(arguments)));
+            RETURN format('(%s)', array_to_string(
+                to_text_array(arguments),
+                format(' %s ', upper(operator))
+            ));
         END IF;
 
         IF operator = 'in' THEN
@@ -776,6 +776,10 @@ BEGIN
             RETURN format('%L::int', query->>0);
         END IF;
         RETURN format('%L::float', query->>0);
+    END IF;
+
+    IF jsonb_typeof(query) = 'boolean' THEN
+        RETURN upper(pgstac.to_text(query));
     END IF;
 
     RETURN quote_literal(pgstac.to_text(query));
