@@ -4,6 +4,18 @@ import pytest
 from shapely.geometry import box, mapping
 
 
+def _len(value):
+    if value is None:
+        return None
+    return len(value)
+
+
+def _to_string(value):
+    if isinstance(value, list):
+        value = ",".join(value)
+    return value
+
+
 def test_app(client):
     response = client.get("/")
     assert response.status_code == 200
@@ -287,28 +299,34 @@ def test_intersects(client, method: str, first_intersects, second_intersects):
     "first_ids",
     [
         None,
-        "ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000",
         ["ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000"],
+        [
+            "ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000",
+            "ASA_IMS_1PNESA20100406_094117_000000152088_00208_42346_0000",
+        ],
     ],
 )
 @pytest.mark.parametrize(
     "second_ids",
     [
         None,
-        "ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000",
         ["ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000"],
+        [
+            "ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000",
+            "ASA_IMS_1PNESA20100406_094117_000000152088_00208_42346_0000",
+        ],
     ],
 )
 def test_ids(client, method: str, first_ids, second_ids):
-    intersecting_id = "ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000"
     params = {
         "first-collections": ["ENVISAT.ASA.IMS_1P"],
         "second-collections": ["ENVISAT.ASA.IMS_1P"],
     }
+
     if first_ids:
-        params["first-ids"] = first_ids
+        params["first-ids"] = _to_string(first_ids) if method == "get" else first_ids
     if second_ids:
-        params["second-ids"] = second_ids
+        params["second-ids"] = _to_string(second_ids) if method == "get" else second_ids
 
     response = client.request(
         method=method,
@@ -324,21 +342,21 @@ def test_ids(client, method: str, first_ids, second_ids):
     assert "numberPairsReturned" in response_json
     # assert "numberPairsMatched" in response_json
 
-    # special case: if both bboxes are set, no pairs are returned, because there is
-    # only one product
-    if first_ids and second_ids:
+    assert len(response_json["featurePairs"]) == response_json["numberPairsReturned"]
+
+    if _len(first_ids) == 1 and _len(second_ids) == 1:
         assert response_json["numberPairsReturned"] == 0
         # assert response_json["numberPairsMatched"] == 0
-        assert not response_json["featurePairs"]
     else:
         assert response_json["numberPairsReturned"] > 0
         # assert response_json["numberPairsMatched"] > 0
-        assert response_json["featurePairs"]
-        for first, second in response_json["featurePairs"]:
-            if first_ids:
-                assert first == intersecting_id
-            if second_ids:
-                assert second == intersecting_id
+
+    for first_id, second_id in response_json["featurePairs"]:
+        assert first_id != second_id
+        if first_ids is not None:
+            assert first_id in first_ids
+        if second_ids is not None:
+            assert second_id in second_ids
 
 
 # first-datetime, second-datetime
