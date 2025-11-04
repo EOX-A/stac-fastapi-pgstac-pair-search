@@ -591,7 +591,7 @@ BEGIN
     start_datetime := lower(parsed_range);
     end_datetime := upper(parsed_range);
     RETURN format(
-        '%sdatetime < %L::timestamptz AND '
+        '%sdatetime <= %L::timestamptz AND '
         '%send_datetime >= %L::timestamptz',
         prefix, end_datetime,
         prefix, start_datetime
