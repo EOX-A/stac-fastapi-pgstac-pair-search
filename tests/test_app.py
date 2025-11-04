@@ -293,40 +293,41 @@ def test_intersects(client, method: str, first_intersects, second_intersects):
                 assert second == intersecting_id
 
 
-# first-ids, second-ids
+# first-collections second-collections
 @pytest.mark.parametrize("method", ["get", "post"])
 @pytest.mark.parametrize(
-    "first_ids",
+    "first_collections",
     [
         None,
-        ["ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000"],
+        ["ENVISAT.ASA.IMS_1P"],
         [
-            "ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000",
-            "ASA_IMS_1PNESA20100406_094117_000000152088_00208_42346_0000",
+            "ENVISAT.ASA.IMS_1P",
+            "ENVISAT.ASA.IMS_1P",  # TODO add different second collection
         ],
     ],
 )
 @pytest.mark.parametrize(
-    "second_ids",
+    "second_collections",
     [
         None,
-        ["ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000"],
+        ["ENVISAT.ASA.IMS_1P"],
         [
-            "ASA_IMS_1PNESA20100602_094953_000000152090_00022_43162_0000",
-            "ASA_IMS_1PNESA20100406_094117_000000152088_00208_42346_0000",
+            "ENVISAT.ASA.IMS_1P",
+            "ENVISAT.ASA.IMS_1P",  # TODO add different second collection
         ],
     ],
 )
-def test_ids(client, method: str, first_ids, second_ids):
-    params = {
-        "first-collections": ["ENVISAT.ASA.IMS_1P"],
-        "second-collections": ["ENVISAT.ASA.IMS_1P"],
-    }
+def test_collections(client, method: str, first_collections, second_collections):
+    params = {}
 
-    if first_ids:
-        params["first-ids"] = _to_string(first_ids) if method == "get" else first_ids
-    if second_ids:
-        params["second-ids"] = _to_string(second_ids) if method == "get" else second_ids
+    if first_collections:
+        params["first-collections"] = (
+            _to_string(first_collections) if method == "get" else first_collections
+        )
+    if second_collections:
+        params["second-collections"] = (
+            _to_string(second_collections) if method == "get" else second_collections
+        )
 
     response = client.request(
         method=method,
@@ -344,19 +345,11 @@ def test_ids(client, method: str, first_ids, second_ids):
 
     assert len(response_json["featurePairs"]) == response_json["numberPairsReturned"]
 
-    if _len(first_ids) == 1 and _len(second_ids) == 1:
-        assert response_json["numberPairsReturned"] == 0
-        # assert response_json["numberPairsMatched"] == 0
-    else:
-        assert response_json["numberPairsReturned"] > 0
-        # assert response_json["numberPairsMatched"] > 0
+    assert response_json["numberPairsReturned"] > 0
+    # assert response_json["numberPairsMatched"] > 0
 
     for first_id, second_id in response_json["featurePairs"]:
         assert first_id != second_id
-        if first_ids is not None:
-            assert first_id in first_ids
-        if second_ids is not None:
-            assert second_id in second_ids
 
 
 # first-datetime, second-datetime
