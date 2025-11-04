@@ -834,7 +834,7 @@ $$ LANGUAGE PLPGSQL; -- STABLE;
 
 -- handle spatial operators
 CREATE OR REPLACE FUNCTION _spatial_operators(
-    IN query jsonb,
+    query jsonb,
     prefixes text[] DEFAULT NULL
 ) RETURNS text AS $$
 DECLARE
@@ -896,6 +896,8 @@ BEGIN
         RETURN format('%L::geometry', bbox_geom(query->'bbox')::text);
     ELSIF jsonb_typeof(query) = 'array' THEN
         RETURN format('%L::geometry', bbox_geom(query)::text);
+    ELSIF jsonb_typeof(query) IN ('string', 'number') THEN
+        RAISE EXCEPTION 'A % literal is not allowed as an argument of spatial operator.', jsonb_typeof(query);
     END IF;
 
     IF query ? 'op' AND query ? 'args' THEN
