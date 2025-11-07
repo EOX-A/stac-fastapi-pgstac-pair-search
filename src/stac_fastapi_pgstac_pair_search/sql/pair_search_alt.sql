@@ -1082,7 +1082,11 @@ BEGIN
 
     IF query ? 'interval' AND jsonb_typeof(query->'interval') = 'array' THEN
         IF jsonb_array_length(query->'interval') = 1 THEN
-            RETURN format('%L::interval', (query->'interval'->>0)::interval);
+            IF query->'interval'->>0 ^@ '-' THEN
+                RETURN format('%L::interval', -(substring(query->'interval'->>0 from 2)::interval));
+            ELSE
+                RETURN format('%L::interval', (query->'interval'->>0)::interval);
+            END IF;
         END IF;
 
         IF jsonb_array_length(query->'interval') = 2 THEN
@@ -1094,7 +1098,9 @@ BEGIN
 
     -- pair-search specific type
     IF query ? 'duration' THEN
-        RETURN _temporal_literal(jsonb_build_object('interval', query->'duration'));
+        RETURN _temporal_literal(
+            jsonb_build_object('interval', json_build_array(query->'duration'))
+        );
     END IF;
 
     IF query ? 'op' AND query ? 'args' THEN
