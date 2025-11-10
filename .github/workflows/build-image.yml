@@ -35,32 +35,33 @@ jobs:
 
       # app image
       - name: Extract metadata (tags, labels) for Docker
-        id: meta
+        id: app_meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/stac-fastapi-pgstac-pair-search
+          images: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/pair-search-app
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
             type=ref,event=pr
       - name: Build and push stac-fastapi-pgstac-pair-search image
-        id: push
+        id: app_push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.app_meta.outputs.tags }}
+          labels: ${{ steps.app_meta.outputs.labels }}
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/stac-fastapi-pgstac-pair-search
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-name: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/pair-search-app
+          subject-digest: ${{ steps.app_push.outputs.digest }}
           push-to-registry: true
 
       # db image
       - name: Extract metadata (tags, labels) for Docker
+        id: db_meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/pgstac-pair-search
@@ -70,16 +71,16 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
       - name: Build and push pgstac-pair-search image
+        id: db_push
         uses: docker/build-push-action@v5
         with:
           context: ./pgstac-pair-search
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.db_meta.outputs.tags }}
+          labels: ${{ steps.db_meta.outputs.labels }}
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/pgstac-pair-search
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-digest: ${{ steps.db_push.outputs.digest }}
           push-to-registry: true
-      
