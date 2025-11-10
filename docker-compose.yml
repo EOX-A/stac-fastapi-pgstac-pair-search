@@ -29,7 +29,8 @@ services:
     command: bash -c "./scripts/wait-for-it.sh database:5432 && python -m stac_fastapi_pgstac_pair_search.app"
 
   database:
-    image: ghcr.io/stac-utils/pgstac:v0.9.8
+    image: pgstac-pair-search
+    build: ./pgstac-pair-search
     environment:
       - POSTGRES_USER=username
       - POSTGRES_PASSWORD=password
@@ -37,8 +38,6 @@ services:
       - PGUSER=username
       - PGPASSWORD=password
       - PGDATABASE=postgis
-    volumes:
-      - ./src/stac_fastapi_pgstac_pair_search/sql/pair_search_alt.sql:/docker-entrypoint-initdb.d/9AA_pair_search_alt.sql
     ports:
       - "5439:5432"
     command: postgres -N 500
