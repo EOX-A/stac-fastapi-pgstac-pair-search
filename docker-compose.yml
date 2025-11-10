@@ -1,6 +1,6 @@
 services:
   app:
-    image: stac-fastapi-pgstac-pair-search
+    image: pair-search-app
     build: .
     environment:
       - APP_HOST=0.0.0.0
