@@ -98,16 +98,15 @@ The `filter` is the core of this extension. It allows you to express conditions 
 This example finds pairs of `ENVISAT.ASA.IMS_1P` items within a specific area and time window, where the time difference between the paired items is less than 35 days.
 
 ```bash
-curl -X POST "http://localhost:8080/pair-search" \
+curl -X POST "http://localhost:8082/pair-search" \
 -H "Content-Type: application/json" \
 -d '{
       "first-collections": ["ENVISAT.ASA.IMS_1P"],
-      "first-bbox": [13.0, 48.0, 14.5, 49.0],
-      "first-datetime": "2010-01-01T00:00:00Z/2010-03-31T23:59:59Z",
+      "first-bbox": [6.0, 43.0, 7.5, 44.0],
       "second-collections": ["ENVISAT.ASA.IMS_1P"],
-      "second-bbox": [13.0, 48.0, 14.5, 49.0],
-      "limit": 50,
-      "filter
+      "second-bbox": [6.0, 43.0, 7.5, 44.0],
+      "limit": 50
+}'
 ```
 
 ---
