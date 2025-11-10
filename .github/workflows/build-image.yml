@@ -38,7 +38,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search
+          images: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/stac-fastapi-pgstac-pair-search
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
@@ -55,7 +55,7 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search
+          subject-name: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/stac-fastapi-pgstac-pair-search
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
@@ -63,7 +63,7 @@ jobs:
       - name: Extract metadata (tags, labels) for Docker
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/eox-a/pgstac-pair-search
+          images: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/pgstac-pair-search
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
@@ -79,7 +79,7 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ env.REGISTRY }}/eox-a/pgstac-pair-search
+          subject-name: ${{ env.REGISTRY }}/eox-a/stac-fastapi-pgstac-pair-search/pgstac-pair-search
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
       
