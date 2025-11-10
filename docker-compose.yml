@@ -44,7 +44,7 @@ services:
 
   # Load test dataset into the PGStac Application
   load_test_data:
-    image: stac-fastapi-pgstac-pair-search
+    image: pair-search-app
     environment:
       - ENVIRONMENT=development
       - PGUSER=username
@@ -65,21 +65,6 @@ services:
     depends_on:
       - database
       - app
-
-  # nginx:
-  #   image: nginx
-  #   ports:
-  #     - ${STAC_FASTAPI_NGINX_PORT:-8080}:80
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #   depends_on:
-  #     - app-nginx
-  #   command: [ "nginx-debug", "-g", "daemon off;" ]
-
-  # app-nginx:
-  #   extends:
-  #     service: app
-  #   command: bash -c "./scripts/wait-for-it.sh database:5432 && uvicorn src.stac_fastapi_pgstac_pair_search.app:app --host 0.0.0.0 --port 8082 --proxy-headers --forwarded-allow-ips=* --root-path=/api/v1/pgstac"
     
 networks:
   default:
