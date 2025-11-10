@@ -1,6 +1,6 @@
 services:
   app:
-    image: stac-fastapi-pgstac-pair-search
+    image: pair-search-app
     build: .
     environment:
       - APP_HOST=0.0.0.0
@@ -29,7 +29,8 @@ services:
     command: bash -c "./scripts/wait-for-it.sh database:5432 && python -m stac_fastapi_pgstac_pair_search.app"
 
   database:
-    image: ghcr.io/stac-utils/pgstac:v0.9.8
+    image: pgstac-pair-search
+    build: ./pgstac-pair-search
     environment:
       - POSTGRES_USER=username
       - POSTGRES_PASSWORD=password
@@ -37,15 +38,13 @@ services:
       - PGUSER=username
       - PGPASSWORD=password
       - PGDATABASE=postgis
-    volumes:
-      - ./src/stac_fastapi_pgstac_pair_search/sql/pair_search_alt.sql:/docker-entrypoint-initdb.d/9AA_pair_search_alt.sql
     ports:
       - "5439:5432"
     command: postgres -N 500
 
   # Load test dataset into the PGStac Application
   load_test_data:
-    image: stac-fastapi-pgstac-pair-search
+    image: pair-search-app
     environment:
       - ENVIRONMENT=development
       - PGUSER=username
@@ -66,21 +65,6 @@ services:
     depends_on:
       - database
       - app
-
-  # nginx:
-  #   image: nginx
-  #   ports:
-  #     - ${STAC_FASTAPI_NGINX_PORT:-8080}:80
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf
-  #   depends_on:
-  #     - app-nginx
-  #   command: [ "nginx-debug", "-g", "daemon off;" ]
-
-  # app-nginx:
-  #   extends:
-  #     service: app
-  #   command: bash -c "./scripts/wait-for-it.sh database:5432 && uvicorn src.stac_fastapi_pgstac_pair_search.app:app --host 0.0.0.0 --port 8082 --proxy-headers --forwarded-allow-ips=* --root-path=/api/v1/pgstac"
     
 networks:
   default:

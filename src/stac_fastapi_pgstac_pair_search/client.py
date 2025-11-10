@@ -1,7 +1,6 @@
 from __future__ import annotations
 import json
 import logging
-from pathlib import Path
 from typing import Dict, Any, Optional, Set, List
 
 from cql2 import Expr
@@ -26,9 +25,6 @@ from stac_fastapi_pgstac_pair_search.extensions.pair_search import PairSearchExt
 
 
 logger = logging.getLogger(__name__)
-
-
-PAIR_SEARCH_SQL = (Path(__file__).parent / "sql" / "pair_search.sql").read_text()
 
 
 class PairSearchClient(CoreCrudClient):
