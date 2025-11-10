@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 - 2025-11-10
+
+* renamed app image from `stac-fastapi-pgstac-pair-search` to `stac-fastapi-pgstac-pair-search/pair-search-app`
+* rebuild `pgstac` image and publish under the name `stac-fastapi-pgstac-pair-search/pgstac-pair-search` with `pair-search` functions 
+* removed old SQL files from repository
+
 ## 0.1.0 - 2025-11-03
 
 * rewriting the low-level DB queries
