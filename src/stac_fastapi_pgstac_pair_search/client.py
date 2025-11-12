@@ -158,6 +158,17 @@ class PairSearchClient(CoreCrudClient):
     ) -> Dict[str, Any]:
         """Fix pair search parameters to format expected by the SQL query."""
 
+        def _fix_input_filter(query):
+            if isinstance(query, dict):
+                if "op" in query and "args" in query:
+                    query["args"] = [
+                        _fix_input_filter(item) for item in query["args"]
+                    ]
+                elif "duration" in query:
+                    # expand duration as an operator
+                    return {"op": "duration", "args": [query["duration"]]}
+            return query
+
         def _fix_filter(query):
             """fix some issues introduced by the buggy cql2 v0.4.x parser"""
             if isinstance(query, float):
@@ -177,10 +188,19 @@ class PairSearchClient(CoreCrudClient):
             return query
 
         if query["filter"]:
-            if query["filter_lang"] == "cql2-text":
-                query["filter"] = Expr(query["filter"]).to_json()
-                query["filter_lang"] = "cql2-json"
-            query["filter"] = _fix_filter(query["filter"])
+            # NOTE query["filter_lang"] does not seem to be correctly parsed
+            #      guessing type of the CQL2 lang instead
+            filter_ = query["filter"]
+            if isinstance(filter_, str):
+                try:
+                    filter_ = json.loads(query["filter"])
+                except json.decoder.JSONDecodeError:
+                    pass # assuming CQL2-text
+            filter_ = _fix_input_filter(filter_)
+            filter_ = Expr(filter_).to_json() # handles all CQL2 types
+            filter_ = _fix_filter(filter_)
+            query["filter"] = filter_
+            query["filter_lang"] = "cql2-json"
         else:
             query["filter"] = None
 

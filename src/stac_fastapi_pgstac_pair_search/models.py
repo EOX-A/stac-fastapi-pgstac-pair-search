@@ -87,7 +87,7 @@ class PairSearchRequest(BaseModel, APIRequest):
     )
 
     filter_expr: Annotated[
-        Optional[str],
+        Optional[str | dict[str, Any] | bool],
         Query(
             alias="filter",
             description="""A CQL2 filter expression for filtering items.\n
